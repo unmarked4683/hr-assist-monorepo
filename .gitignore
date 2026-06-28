@@ -1,0 +1,66 @@
+# ==========================================
+# ROOT GITIGNORE FOR MONOREPO (HR-ASSIST)
+# ==========================================
+
+# v0 sandbox internal files
+**/__v0_runtime_loader.js
+**/__v0_devtools.tsx
+**/__v0_jsx-dev-runtime.ts
+**/.snowflake/
+**/.v0-trash/
+**/.vercel/
+
+# Dependencies and package managers
+**/node_modules/
+**/.pnpm/
+
+# Build and compiled outputs
+**/dist/
+**/.next/
+**/build/
+**/out/
+
+# Logs and debugging files
+**/logs/
+**/*.log
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/lerna-debug.log*
+
+# OS generated files
+.DS_Store
+**/.DS_Store
+
+# Testing and coverage artifacts
+**/coverage/
+**/.nyc_output/
+
+# Environment variables and secrets
+**/.env
+**/.env.*
+**/.env*.local
+
+# IDEs, editors and workspaces
+**/.idea/
+**/.project
+**/.classpath
+**/.c9/
+**/*.launch
+**/.settings/
+**/*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Temporary and runtime process data
+**/.temp/
+**/.tmp/
+**/pids/
+**/*.seed
+**/*.pid
+**/*.pid.lock
+**/report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
