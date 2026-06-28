@@ -1,51 +1,54 @@
-# HR-Assist Development Standards
+```markdown
+# HR-Assist Development Standards (Master Manifest)
 
-## 1. Project Philosophy
+## 1. Core Philosophy
 
-- **KISS & DRY**: If logic is duplicated, abstract it. If a solution is complex, simplify it.
-- **SOLID**: Strict adherence to Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion.
-- **Language**: English is mandatory for all code, comments, documentation, and commit messages. Polish is reserved for UI strings only.
-- **Optimized Performance**: Code must be efficient. Avoid unnecessary re-renders in React and inefficient DB queries in Prisma.
+- **Toyota Hilux Standard**: Code must be reliable, predictable, and robust. Prioritize maintainability and stability over fancy features.
+- **English-First**: All code, filenames, logic, comments, and commit messages MUST be in English. Only UI strings (user-facing) are in Polish.
+- **KISS & DRY**: If it's complex, simplify it. If it's duplicated, abstract it.
+- **Long-term Value**: Write code so that any future developer (human or AI) can understand the structure in minutes. Zero technical debt allowed.
 
-## 2. Backend (NestJS, TypeScript, PostgreSQL, Prisma)
+## 2. Backend (NestJS + Prisma + TypeScript)
 
-- **Layered Architecture**: Controller (routing) -> Service (business logic) -> Repository/Prisma (data access).
-- **Controller Constraints**: Logic is forbidden in controllers. They must only delegate to services.
-- **Data Integrity**: `class-validator` and `class-transformer` are mandatory for all DTOs.
-- **Security & Error Handling**:
-  - Global `ExceptionFilter` for standardized API responses.
-  - Interceptor-based `ResponseWrapper` for consistent data structures.
-  - JWT for authentication.
-- **Maintainability**: Centralized structured logging (Pino/Winston). No `console.log`.
-- **Maintenance CLI**: Use `commander` for internal system tasks (user management, etc.).
+- **Architecture**: Layered approach (Controller -> Service -> Repository/Prisma).
+- **Controller Layer**: Minimalist. ONLY handles route mapping and delegating to services. NO business logic.
+- **Security**:
+  - Password Hashing: Argon2id (Strictly).
+  - SQL Injection: Use Prisma ORM methods exclusively. No raw queries.
+  - Authentication: Simple JWT-based stateless auth.
+- **Validation**: Strict use of `class-validator` and `class-transformer` for all DTOs.
+- **Logging**: Use `nestjs-pino` with JSON output. Logs directed to `/api/logs/app.log` (mounted as Docker volume).
+- **Maintenance**: Implement a CLI using `commander` for administrative tasks (password resets, log viewing, etc.).
 
-## 3. Frontend (Next.js 16+, Tailwind CSS, TypeScript)
+## 3. Frontend (Next.js 16+ + Tailwind CSS)
 
-- **Component Design**: Atomic composition. No "God components". Max component length: 150 lines.
-- **State & Data**: TanStack Query (React Query) for server-state management. No raw `useEffect` API fetching.
-- **Styling**: Tailwind CSS only. Maintain utility-first, semantic class structure.
+- **Design Philosophy**: Minimalist UI, high accessibility. If a user needs a manual, the UI is wrong.
+- **State Management**: Use TanStack Query (React Query) for API interaction.
+- **Tech**: Axios for API client with interceptors for JWT. No raw `useEffect` fetches.
+- **Auth Flow**: Two states: Unauthenticated (Login Screen) and Authenticated (Dashboard). Logout functionality is required.
+- **Reliability**: All forms must have client-side and server-side validation.
 
-## 4. Operational & Deployment (Docker)
+## 4. Infrastructure & Deployment (Docker)
 
-- **Containerization**: Must be bootable via `docker-compose up --build` from root.
-- **Architecture**:
-  - `web` (Next.js) - port 3000
-  - `api` (NestJS) - port 3001
+- **Single Command**: System must be bootable via `docker-compose up --build`.
+- **Containers**:
+  - `web` (Next.js)
+  - `api` (NestJS)
   - `db` (Postgres)
-- **Networking**: Services must communicate using internal service names (e.g., `http://api:3001`).
+- **Networking**: Internal communication via service names.
 
-## 5. The "Safety Cage" (Negative Constraints)
+## 5. Security & Data Protection (RODO Compliance)
 
-- **NO Logic in Controllers**: Controllers must only handle request validation and delegation.
-- **NO Inline Queries**: Use Prisma Client properly via service/repository methods.
-- **NO Magic Strings/Numbers**: Define all configuration in constants or environment variables.
-- **NO "Any" types**: Strict typing is required. If a type cannot be defined, the architecture is flawed.
-- **NO "// @ts-ignore"**: If the compiler complains, fix the architecture.
-- **NO Boilerplate**: Generate only necessary, lean code.
-- **Naming**: Use descriptive, intention-revealing names.
+- **Zero Plain-text**: No passwords or sensitive data in plain text in logs or DB.
+- **Sanitization**: All inputs are sanitized.
+- **Error Handling**: Standardized `ExceptionFilter`. Do not expose internal stack traces to the user.
+- **Data Privacy**: All data resides locally on the company-owned server.
 
-## 6. Execution Rules
+## 6. The "Safety Cage" (Negative Constraints)
 
-- Always verify changes against the `docker-compose` setup.
-- If a task involves new DB entities, update `schema.prisma` first, then generate Prisma client, then update DTOs.
-- Maintain consistency between backend DTOs and frontend interfaces.
+- **NO Role-Based Access Control**: Simple flat authentication for MVP.
+- **NO God Components**: Max component length: 150 lines. Break down complex UIs.
+- **NO "Any" Types**: Strict typing is non-negotiable.
+- **NO Legacy Syntax**: Use modern stable ES2024 features.
+- **NO Quick Fixes**: No `// @ts-ignore`. If it fails, fix the underlying architecture.
+```
