@@ -25,7 +25,7 @@ function StatusIndicator({ employee }: { employee: Employee }) {
     <span className="flex items-center gap-1.5 text-sm">
       <span className="w-2 h-2 rounded-full bg-[oklch(0.52_0.17_145)] shrink-0" />
       <span className="text-[oklch(0.52_0.17_145)] dark:text-[oklch(0.6_0.17_145)] font-medium">
-        Okej
+        OK
       </span>
     </span>
   );
