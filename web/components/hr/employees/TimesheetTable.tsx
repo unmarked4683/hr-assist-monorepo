@@ -24,6 +24,19 @@ interface TimesheetTableProps {
   onDayClick: (date: IsoDate) => void;
 }
 
+function TimesheetColumnGroup() {
+  return (
+    <colgroup>
+      <col className="w-[8%]" />
+      <col className="w-[11%]" />
+      <col className="w-[16%]" />
+      <col className="w-[22%]" />
+      <col className="w-[22%]" />
+      <col className="w-[21%]" />
+    </colgroup>
+  );
+}
+
 export const TimesheetTable = ({
   employee,
   month,
@@ -49,14 +62,7 @@ export const TimesheetTable = ({
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
       <table className="w-full text-sm table-fixed shrink-0">
-        <colgroup>
-          <col className="w-12" />
-          <col className="w-12" />
-          <col className="w-32" />
-          <col className="w-24" />
-          <col className="w-24" />
-          <col className="w-24" />
-        </colgroup>
+        <TimesheetColumnGroup />
         <thead>
           <tr className="border-b border-border bg-muted/50">
             {[
@@ -69,7 +75,7 @@ export const TimesheetTable = ({
             ].map((label) => (
               <th
                 key={label}
-                className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide"
+                className="text-center px-2 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide leading-snug"
               >
                 {label}
               </th>
@@ -80,14 +86,7 @@ export const TimesheetTable = ({
 
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
         <table className="w-full text-sm table-fixed">
-          <colgroup>
-            <col className="w-12" />
-            <col className="w-12" />
-            <col className="w-32" />
-            <col className="w-24" />
-            <col className="w-24" />
-            <col className="w-24" />
-          </colgroup>
+          <TimesheetColumnGroup />
           <tbody className="hr-table-zebra">
             {days.map(
               ({ day, dateStr, weekend, rowStatus, isToday, isFuture }) => {
@@ -111,14 +110,14 @@ export const TimesheetTable = ({
                     {isToday ? (
                       <TodayDayCell day={day} />
                     ) : (
-                      <td className="px-3 py-2.5 text-center font-medium tabular-nums">
+                      <td className="px-2 py-2.5 text-center font-medium tabular-nums">
                         {day}
                       </td>
                     )}
-                    <td className="px-3 py-2.5 text-center">
+                    <td className="px-2 py-2.5 text-center">
                       {getDayOfWeek(year, month, day)}
                     </td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">
+                    <td className="px-2 py-2.5 text-center tabular-nums whitespace-nowrap">
                       {weekend ? (
                         <span className="text-xs text-muted-foreground/60 italic">
                           wolne
@@ -127,13 +126,13 @@ export const TimesheetTable = ({
                         `${employee.startHour} – ${employee.endHour}`
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">
+                    <td className="px-2 py-2.5 text-center tabular-nums">
                       {weekend ? "—" : nomHours}
                     </td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">
+                    <td className="px-2 py-2.5 text-center tabular-nums">
                       {weekend ? "—" : getRealHours(dateStr, employee)}
                     </td>
-                    <td className="px-3 py-2.5 text-center">
+                    <td className="px-2 py-2.5 text-center">
                       {weekend ? (
                         <span className="text-xs text-muted-foreground/60 italic">
                           —

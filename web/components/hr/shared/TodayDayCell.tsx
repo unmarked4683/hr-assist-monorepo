@@ -12,7 +12,7 @@ export const TodayDayCell = ({ day }: TodayDayCellProps) => {
 
   return (
     <td
-      className="hr-today-day-cell relative overflow-visible px-3 py-2.5 text-center font-medium tabular-nums"
+      className="hr-today-day-cell relative overflow-visible px-2 py-2.5 text-center font-medium tabular-nums"
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
     >
