@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
+import { AppProvider } from '@/components/hr/AppContext'
 import './globals.css'
 
 const inter = Inter({ variable: '--font-inter', subsets: ['latin', 'latin-ext'] })
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pl" className={`${inter.variable} ${geistMono.variable} bg-background`}>
       <body className="font-sans antialiased h-screen max-h-screen min-h-screen overflow-hidden">
-        {children}
+        <AppProvider>{children}</AppProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

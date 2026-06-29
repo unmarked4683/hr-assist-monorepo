@@ -11,55 +11,37 @@ import {
   DayStatus,
 } from '@/lib/hr-data'
 
-export type Screen = 'login' | 'dashboard' | 'employee-detail'
 export type Theme = 'light' | 'dark' | 'system'
 
 interface AppContextValue {
-  // Auth
   isLoggedIn: boolean
   loginError: boolean
   login: (email: string, password: string) => void
   logout: () => void
 
-  // Navigation
-  screen: Screen
-  setScreen: (s: Screen) => void
-  selectedEmployeeId: string | null
-  openEmployeeDetail: (id: string) => void
-
-  // Theme
   theme: Theme
   setTheme: (t: Theme) => void
 
-  // Employees
   employees: Employee[]
   refreshEmployees: () => void
   getEmployee: (id: string) => Employee | undefined
 
-  // Modals
-  isAddEditModalOpen: boolean
+  isEmployeeFormOpen: boolean
   editingEmployee: Employee | null
-  openCreateModal: () => void
-  openEditModal: (emp: Employee) => void
-  closeAddEditModal: () => void
+  openCreateEmployeeForm: () => void
+  openEditEmployeeForm: (emp: Employee) => void
+  closeEmployeeForm: () => void
   saveEmployee: (data: Omit<Employee, 'id' | 'dayRecords'>, id?: string) => void
 
-  // Day Edit Modal
-  isDayEditModalOpen: boolean
+  isDayStatusModalOpen: boolean
   editingDate: string | null
-  openDayEditModal: (date: string) => void
-  closeDayEditModal: () => void
+  openDayStatusModal: (date: string) => void
+  closeDayStatusModal: () => void
   saveDayRecord: (employeeId: string, date: string, status: DayStatus) => void
 
-  // Report Modal
   isReportModalOpen: boolean
   openReportModal: () => void
   closeReportModal: () => void
-
-  // Timesheet period
-  timesheetMonth: number
-  timesheetYear: number
-  setTimesheetPeriod: (month: number, year: number) => void
 }
 
 const AppCtx = createContext<AppContextValue | null>(null)
@@ -67,31 +49,22 @@ const AppCtx = createContext<AppContextValue | null>(null)
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loginError, setLoginError] = useState(false)
-  const [screen, setScreen] = useState<Screen>('login')
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null)
   const [theme, setThemeState] = useState<Theme>('system')
   const [employees, setEmployees] = useState<Employee[]>(getEmployees())
-  const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false)
+  const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
-  const [isDayEditModalOpen, setIsDayEditModalOpen] = useState(false)
+  const [isDayStatusModalOpen, setIsDayStatusModalOpen] = useState(false)
   const [editingDate, setEditingDate] = useState<string | null>(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
-  const now = new Date()
-  const [timesheetMonth, setTimesheetMonth] = useState(now.getMonth() + 1)
-  const [timesheetYear, setTimesheetYear] = useState(now.getFullYear() < 2026 ? 2026 : now.getFullYear())
-
-  // Apply theme class to html element
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     const html = document.documentElement
     html.classList.remove('light', 'dark')
     if (t === 'light') html.classList.add('light')
     else if (t === 'dark') html.classList.add('dark')
-    // 'system' → no class, CSS media query handles it
   }, [])
 
-  // Persist theme preference
   useEffect(() => {
     const stored = localStorage.getItem('hr-theme') as Theme | null
     if (stored) setTheme(stored)
@@ -102,11 +75,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [theme])
 
   const login = useCallback((email: string, password: string) => {
-    // Mock auth — replace with real API call
     if (email && password.length >= 4) {
       setIsLoggedIn(true)
       setLoginError(false)
-      setScreen('dashboard')
     } else {
       setLoginError(true)
       setTimeout(() => setLoginError(false), 4000)
@@ -115,7 +86,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     setIsLoggedIn(false)
-    setScreen('login')
   }, [])
 
   const refreshEmployees = useCallback(() => {
@@ -124,23 +94,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const getEmployee = useCallback((id: string) => getEmployeeById(id), [])
 
-  const openEmployeeDetail = useCallback((id: string) => {
-    setSelectedEmployeeId(id)
-    setScreen('employee-detail')
-  }, [])
-
-  const openCreateModal = useCallback(() => {
+  const openCreateEmployeeForm = useCallback(() => {
     setEditingEmployee(null)
-    setIsAddEditModalOpen(true)
+    setIsEmployeeFormOpen(true)
   }, [])
 
-  const openEditModal = useCallback((emp: Employee) => {
+  const openEditEmployeeForm = useCallback((emp: Employee) => {
     setEditingEmployee(emp)
-    setIsAddEditModalOpen(true)
+    setIsEmployeeFormOpen(true)
   }, [])
 
-  const closeAddEditModal = useCallback(() => {
-    setIsAddEditModalOpen(false)
+  const closeEmployeeForm = useCallback(() => {
+    setIsEmployeeFormOpen(false)
     setEditingEmployee(null)
   }, [])
 
@@ -152,18 +117,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         createEmployee(data)
       }
       refreshEmployees()
-      closeAddEditModal()
+      closeEmployeeForm()
     },
-    [refreshEmployees, closeAddEditModal]
+    [refreshEmployees, closeEmployeeForm],
   )
 
-  const openDayEditModal = useCallback((date: string) => {
+  const openDayStatusModal = useCallback((date: string) => {
     setEditingDate(date)
-    setIsDayEditModalOpen(true)
+    setIsDayStatusModalOpen(true)
   }, [])
 
-  const closeDayEditModal = useCallback(() => {
-    setIsDayEditModalOpen(false)
+  const closeDayStatusModal = useCallback(() => {
+    setIsDayStatusModalOpen(false)
     setEditingDate(null)
   }, [])
 
@@ -171,30 +136,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     (employeeId: string, date: string, status: DayStatus) => {
       upsertDayRecord(employeeId, date, status)
       refreshEmployees()
-      closeDayEditModal()
+      closeDayStatusModal()
     },
-    [refreshEmployees, closeDayEditModal]
+    [refreshEmployees, closeDayStatusModal],
   )
 
   const openReportModal = useCallback(() => setIsReportModalOpen(true), [])
   const closeReportModal = useCallback(() => setIsReportModalOpen(false), [])
 
-  const setTimesheetPeriod = useCallback((month: number, year: number) => {
-    setTimesheetMonth(month)
-    setTimesheetYear(year)
-  }, [])
-
   return (
     <AppCtx.Provider
       value={{
-        isLoggedIn, loginError, login, logout,
-        screen, setScreen, selectedEmployeeId, openEmployeeDetail,
-        theme, setTheme,
-        employees, refreshEmployees, getEmployee,
-        isAddEditModalOpen, editingEmployee, openCreateModal, openEditModal, closeAddEditModal, saveEmployee,
-        isDayEditModalOpen, editingDate, openDayEditModal, closeDayEditModal, saveDayRecord,
-        isReportModalOpen, openReportModal, closeReportModal,
-        timesheetMonth, timesheetYear, setTimesheetPeriod,
+        isLoggedIn,
+        loginError,
+        login,
+        logout,
+        theme,
+        setTheme,
+        employees,
+        refreshEmployees,
+        getEmployee,
+        isEmployeeFormOpen,
+        editingEmployee,
+        openCreateEmployeeForm,
+        openEditEmployeeForm,
+        closeEmployeeForm,
+        saveEmployee,
+        isDayStatusModalOpen,
+        editingDate,
+        openDayStatusModal,
+        closeDayStatusModal,
+        saveDayRecord,
+        isReportModalOpen,
+        openReportModal,
+        closeReportModal,
       }}
     >
       {children}

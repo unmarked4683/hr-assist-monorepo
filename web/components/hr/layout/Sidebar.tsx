@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Users, Sun, Moon, Monitor, ChevronRight } from 'lucide-react'
-import { useApp, Theme } from './AppContext'
+import { useApp, Theme } from '../AppContext'
 
 export function Sidebar() {
   const { theme, setTheme } = useApp()
@@ -10,7 +10,6 @@ export function Sidebar() {
   const popoverRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
-  // Close popover on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
@@ -33,12 +32,10 @@ export function Sidebar() {
 
   return (
     <aside className="w-60 shrink-0 h-screen flex flex-col bg-sidebar border-r border-sidebar-border">
-      {/* Logo */}
       <div className="px-5 pt-6 pb-4">
         <span className="text-lg font-bold text-sidebar-foreground tracking-tight">HR Assist</span>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-2">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent text-sidebar-primary font-medium text-sm cursor-default select-none">
           <Users size={17} />
@@ -46,7 +43,6 @@ export function Sidebar() {
         </div>
       </nav>
 
-      {/* Profile block */}
       <div className="px-3 pb-4 relative">
         <button
           ref={triggerRef}
@@ -54,7 +50,6 @@ export function Sidebar() {
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-sidebar-accent transition-colors text-left"
           aria-label="Opcje profilu"
         >
-          {/* Avatar */}
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
             <span className="text-xs font-bold text-primary-foreground">BK</span>
           </div>
@@ -68,7 +63,6 @@ export function Sidebar() {
           />
         </button>
 
-        {/* Theme popover */}
         {popoverOpen && (
           <div
             ref={popoverRef}

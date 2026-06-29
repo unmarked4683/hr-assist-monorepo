@@ -4,13 +4,15 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/components/hr/AppContext'
 
-export default function HomePage() {
+export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useApp()
   const router = useRouter()
 
   useEffect(() => {
-    router.replace(isLoggedIn ? '/employees' : '/login')
+    if (!isLoggedIn) router.replace('/login')
   }, [isLoggedIn, router])
 
-  return null
+  if (!isLoggedIn) return null
+
+  return children
 }
