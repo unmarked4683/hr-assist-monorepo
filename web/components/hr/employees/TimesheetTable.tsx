@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import {
   getDaysInMonth,
   getDayOfWeek,
@@ -43,6 +44,8 @@ export const TimesheetTable = ({
   year,
   onDayClick,
 }: TimesheetTableProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const todayRowRef = useRef<HTMLTableRowElement>(null);
   const daysCount = getDaysInMonth(year, month);
   const todayStr = getTodayIsoDate();
   const nomHours = `${calcShiftHours(employee.startHour, employee.endHour)}h`;
@@ -58,6 +61,19 @@ export const TimesheetTable = ({
       : getRowStatus(dateStr, employee, todayStr);
     return { day, dateStr, weekend, rowStatus, isToday, isFuture };
   });
+
+  const hasTodayInView = days.some(({ isToday }) => isToday);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (hasTodayInView) {
+        todayRowRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
+      } else {
+        scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [month, year, hasTodayInView]);
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
@@ -84,7 +100,10 @@ export const TimesheetTable = ({
         </thead>
       </table>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+      <div
+        ref={scrollRef}
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent"
+      >
         <table className="w-full text-sm table-fixed">
           <TimesheetColumnGroup />
           <tbody className="hr-table-zebra">
@@ -95,6 +114,7 @@ export const TimesheetTable = ({
                 return (
                   <tr
                     key={dateStr}
+                    ref={isToday ? todayRowRef : undefined}
                     onClick={() => !weekend && onDayClick(dateStr)}
                     className={[
                       "hr-table-row",
