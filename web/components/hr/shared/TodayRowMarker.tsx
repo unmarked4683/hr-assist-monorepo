@@ -1,12 +1,19 @@
-export const TodayRowMarker = () => {
+'use client'
+
+interface TodayRowMarkerProps {
+  expanded: boolean
+}
+
+export const TodayRowMarker = ({ expanded }: TodayRowMarkerProps) => {
   return (
     <span
-      className="hr-today-marker-hit"
+      className={`hr-today-marker${expanded ? ' hr-today-marker--expanded' : ''}`}
       aria-label="Dziś"
-      onClick={(e) => e.stopPropagation()}
     >
-      <span className="hr-today-marker">
-        <span className="hr-today-marker-text">DZIŚ</span>
+      <span
+        className={`hr-today-marker-text${expanded ? ' hr-today-marker-text--visible' : ''}`}
+      >
+        DZIŚ
       </span>
     </span>
   )

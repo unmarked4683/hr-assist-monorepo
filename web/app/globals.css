@@ -217,22 +217,13 @@ tbody.hr-table-zebra > tr:nth-child(even) > td {
   border-bottom: none;
 }
 
-/* Today — hit (28px) + czerwony pasek (.hr-today-marker) rozwijany przy hover */
-.hr-today-marker-hit {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 20;
-  width: 28px;
-  cursor: default;
-}
-
+/* Today — rozwija się przy hover na komórce z numerem dnia (stan w React) */
 .hr-today-marker {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
+  z-index: 10;
   width: 4px;
   overflow: hidden;
   display: flex;
@@ -243,7 +234,7 @@ tbody.hr-table-zebra > tr:nth-child(even) > td {
   transition: width 220ms ease;
 }
 
-.hr-today-marker-hit:hover .hr-today-marker {
+.hr-today-marker--expanded {
   width: 52px;
 }
 
@@ -258,7 +249,7 @@ tbody.hr-table-zebra > tr:nth-child(even) > td {
   transition: opacity 160ms ease 50ms;
 }
 
-.hr-today-marker-hit:hover .hr-today-marker-text {
+.hr-today-marker-text--visible {
   opacity: 1;
 }
 

@@ -15,7 +15,7 @@ import {
 } from "@/lib/domain/attendance";
 import type { Employee, IsoDate } from "@/lib/types";
 import { AttendanceStatusBadge } from "../shared/AttendanceStatusBadge";
-import { TodayRowMarker } from "../shared/TodayRowMarker";
+import { TodayDayCell } from "../shared/TodayDayCell";
 
 interface TimesheetTableProps {
   employee: Employee;
@@ -94,7 +94,6 @@ export const TimesheetTable = ({
                     onClick={() => !weekend && onDayClick(dateStr)}
                     className={[
                       "hr-table-row",
-                      isToday && "hr-today-row",
                       weekend
                         ? "text-muted-foreground cursor-default"
                         : "hr-table-row-clickable",
@@ -104,10 +103,13 @@ export const TimesheetTable = ({
                       .filter(Boolean)
                       .join(" ")}
                   >
-                    <td className="relative overflow-visible px-3 py-2.5 text-center font-medium tabular-nums">
-                      {isToday && <TodayRowMarker />}
-                      {day}
-                    </td>
+                    {isToday ? (
+                      <TodayDayCell day={day} />
+                    ) : (
+                      <td className="px-3 py-2.5 text-center font-medium tabular-nums">
+                        {day}
+                      </td>
+                    )}
                     <td className="px-3 py-2.5 text-center">
                       {getDayOfWeek(year, month, day)}
                     </td>
