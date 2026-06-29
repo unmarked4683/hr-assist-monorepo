@@ -89,7 +89,7 @@ export function EmployeeListPage() {
             </thead>
           </table>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-8 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
             <table className="w-full text-sm table-fixed">
               <ColumnGroup />
               <tbody className="hr-table-zebra">
