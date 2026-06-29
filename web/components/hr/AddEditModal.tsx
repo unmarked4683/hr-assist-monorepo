@@ -5,6 +5,7 @@ import { X, Building2, Settings2, ChevronDown } from 'lucide-react'
 import { useApp } from './AppContext'
 import {
   ContractType,
+  CONTRACT_TYPE_LABELS,
   WorkDimension,
   Location,
   Company,
@@ -14,7 +15,6 @@ import {
   DIMENSION_LABEL,
 } from '@/lib/hr-data'
 
-const CONTRACT_TYPES: ContractType[] = ['Umowa o pracę', 'Umowa zlecenie', 'Umowa o dzieło', 'B2B']
 const WORK_DIMENSIONS: WorkDimension[] = ['1', '7/8', '3/4', '5/8', '1/2', '3/8', '1/4', '1/8']
 const COMPANIES: Company[] = ['Spółka Produkcja', 'Spółka Serwis', 'Spółka Marka Własna']
 const POSITION_SUGGESTIONS = ['Brygadzista', 'Specjalista', 'Kierownik', 'Pracownik', 'Operator', 'Technik', 'Analityk', 'Manager']
@@ -217,7 +217,7 @@ function buildInitial(emp?: Employee | null) {
     firstName: emp?.firstName ?? '',
     lastName: emp?.lastName ?? '',
     pesel: emp?.pesel ?? '',
-    contractType: (emp?.contractType ?? 'Umowa o pracę') as ContractType,
+    contractType: emp?.contractType ?? ContractType.EmploymentContract,
     workDimension: (emp?.workDimension ?? '1') as WorkDimension,
     startHour: emp?.startHour ?? '08:00',
     endHour: emp?.endHour ?? '16:00',
@@ -275,7 +275,7 @@ export function AddEditModal() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (isEdit && !isDirty) return
-    saveEmployee(form, editingEmployee?.id)
+    saveEmployee({ ...form, contractType: ContractType.EmploymentContract }, editingEmployee?.id)
   }
 
   if (!isAddEditModalOpen) return null
@@ -357,15 +357,8 @@ export function AddEditModal() {
             <div className="grid grid-cols-4 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-muted-foreground">Typ umowy</label>
-                <div className="relative">
-                  <select
-                    value={form.contractType}
-                    onChange={(e) => set('contractType', e.target.value as ContractType)}
-                    className="h-9 w-full pl-3 pr-8 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition appearance-none cursor-pointer"
-                  >
-                    {CONTRACT_TYPES.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <div className="h-9 px-3 flex items-center rounded-lg border border-border bg-muted/30 text-sm text-muted-foreground select-none">
+                  {CONTRACT_TYPE_LABELS[ContractType.EmploymentContract]}
                 </div>
               </div>
 

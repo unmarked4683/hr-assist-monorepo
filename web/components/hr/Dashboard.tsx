@@ -1,43 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Plus, MapPin } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { useApp } from "./AppContext";
-import { Employee } from "@/lib/hr-data";
+import { employeeHasUnexcusedAbsence } from "@/lib/hr-data";
 import { Sidebar } from "./Sidebar";
+import { DayStatusBadge, LocationBadge } from "./HrBadges";
 
-function StatusIndicator({ employee }: { employee: Employee }) {
-  // Determine worst status from day records
-  const hasUnexcused = employee.dayRecords.some(
-    (d) => d.status === "Nieobecność nieusprawiedliwiona",
-  );
+function EmployeeStatusSummary({ hasUnexcused }: { hasUnexcused: boolean }) {
   if (hasUnexcused) {
-    return (
-      <span className="flex items-center gap-1.5 text-sm">
-        <span className="w-2 h-2 rounded-full bg-[oklch(0.53_0.22_25)] shrink-0" />
-        <span className="text-[oklch(0.53_0.22_25)] dark:text-[oklch(0.62_0.22_25)] font-medium">
-          Wymaga działania
-        </span>
-      </span>
-    );
+    return <DayStatusBadge variant="unexcused" summary />;
   }
-  return (
-    <span className="flex items-center gap-1.5 text-sm">
-      <span className="w-2 h-2 rounded-full bg-[oklch(0.52_0.17_145)] shrink-0" />
-      <span className="text-[oklch(0.52_0.17_145)] dark:text-[oklch(0.6_0.17_145)] font-medium">
-        OK
-      </span>
-    </span>
-  );
-}
-
-function LocationBadge({ location }: { location: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
-      <MapPin size={10} />
-      {location}
-    </span>
-  );
+  return <DayStatusBadge variant="ok" summary />;
 }
 
 export function Dashboard() {
@@ -54,17 +28,13 @@ export function Dashboard() {
     );
   });
 
-  const hasUnexcused = (emp: Employee) =>
-    emp.dayRecords.some((d) => d.status === "Nieobecność nieusprawiedliwiona");
-
   return (
-    <div className="flex h-screen bg-background overflow-hidden w-screen">
+    <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
         <header className="flex items-center gap-3 px-6 py-4 border-b border-border bg-card shrink-0 max-w-full">
-          <div className="relative flex-1 grow">
+          <div className="relative flex-1">
             <Search
               size={15}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
@@ -86,10 +56,16 @@ export function Dashboard() {
           </button>
         </header>
 
-        {/* Table */}
         <div className="flex-1 overflow-auto px-6 py-5">
           <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col className="w-[18%]" />
+                <col className="w-[18%]" />
+                <col className="w-[28%]" />
+                <col className="w-[18%]" />
+                <col className="w-[18%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
@@ -101,10 +77,10 @@ export function Dashboard() {
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                     Stanowisko
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+                  <th className="text-center px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                     Lokalizacja
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+                  <th className="text-center px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                     Status
                   </th>
                 </tr>
@@ -121,7 +97,7 @@ export function Dashboard() {
                   </tr>
                 )}
                 {filteredEmployees.map((emp, i) => {
-                  const pulsing = hasUnexcused(emp);
+                  const pulsing = employeeHasUnexcusedAbsence(emp);
                   return (
                     <tr
                       key={emp.id}
@@ -141,11 +117,15 @@ export function Dashboard() {
                       <td className="px-4 py-3 text-muted-foreground">
                         {emp.position}
                       </td>
-                      <td className="px-4 py-3">
-                        <LocationBadge location={emp.location} />
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex justify-center">
+                          <LocationBadge location={emp.location} />
+                        </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <StatusIndicator employee={emp} />
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex justify-center">
+                          <EmployeeStatusSummary hasUnexcused={pulsing} />
+                        </div>
                       </td>
                     </tr>
                   );

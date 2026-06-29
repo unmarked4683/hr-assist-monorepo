@@ -4,24 +4,141 @@
 // when connecting a real backend.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type ContractType = 'Umowa o pracę' | 'Umowa zlecenie' | 'Umowa o dzieło' | 'B2B'
+export enum ContractType {
+  EmploymentContract = 'employment_contract',
+}
+
+export const CONTRACT_TYPE_LABELS: Record<ContractType, string> = {
+  [ContractType.EmploymentContract]: 'Umowa o pracę',
+}
+
 export type WorkDimension = '1' | '7/8' | '3/4' | '5/8' | '1/2' | '3/8' | '1/4' | '1/8'
 export type Location = 'Biuro' | 'Hala'
 export type Company = 'Spółka Produkcja' | 'Spółka Serwis' | 'Spółka Marka Własna'
 
-export type DayStatus =
-  | 'Obecność'
-  | 'Nieobecność nieusprawiedliwiona'
-  | 'Urlop wypoczynkowy'
-  | 'Urlop na żądanie'
-  | 'Urlop macierzyński'
-  | 'Urlop wychowawczy'
-  | 'Urlop bezpłatny'
-  | 'Choroba'
-  | 'Opieka'
-  | 'Zwolnienie płatne'
-  | 'Zwolnienie niepłatne'
-  | 'Służba wojskowa'
+export enum DayStatusCategory {
+  Present = 'present',
+  Unexcused = 'unexcused',
+  Excused = 'excused',
+}
+
+export enum DayStatus {
+  Present = 'present',
+  UnexcusedAbsence = 'unexcused_absence',
+  ExcusedPaidAbsence = 'excused_paid_absence',
+  ExcusedUnpaidAbsence = 'excused_unpaid_absence',
+  UnpaidLeave = 'unpaid_leave',
+  AnnualLeave = 'annual_leave',
+  OnDemandLeave = 'on_demand_leave',
+  OccasionalLeave = 'occasional_leave',
+  MaternityLeave = 'maternity_leave',
+  ParentalLeave = 'parental_leave',
+  PaternityLeave = 'paternity_leave',
+  ChildcareLeave = 'childcare_leave',
+  CareLeave = 'care_leave',
+  SickLeave = 'sick_leave',
+  RehabilitationBenefit = 'rehabilitation_benefit',
+  HolidayCompDay = 'holiday_comp_day',
+}
+
+export const DAY_STATUS_LABELS: Record<DayStatus, string> = {
+  [DayStatus.Present]: 'Obecność',
+  [DayStatus.UnexcusedAbsence]: 'Nieobecność nieusprawiedliwiona',
+  [DayStatus.ExcusedPaidAbsence]: 'Nieobecność usprawiedliwiona płatna',
+  [DayStatus.ExcusedUnpaidAbsence]: 'Nieobecność usprawiedliwiona niepłatna',
+  [DayStatus.UnpaidLeave]: 'Urlop bezpłatny',
+  [DayStatus.AnnualLeave]: 'Urlop wypoczynkowy',
+  [DayStatus.OnDemandLeave]: 'Urlop na żądanie',
+  [DayStatus.OccasionalLeave]: 'Urlop okolicznościowy',
+  [DayStatus.MaternityLeave]: 'Urlop macierzyński',
+  [DayStatus.ParentalLeave]: 'Urlop rodzicielski',
+  [DayStatus.PaternityLeave]: 'Urlop ojcowski',
+  [DayStatus.ChildcareLeave]: 'Urlop wychowawczy',
+  [DayStatus.CareLeave]: 'Opieka',
+  [DayStatus.SickLeave]: 'Chorobowe',
+  [DayStatus.RehabilitationBenefit]: 'Świadczenie rehabilitacyjne',
+  [DayStatus.HolidayCompDay]: 'Dzień wolny za święto',
+}
+
+export const DAY_STATUS_TO_CATEGORY: Record<DayStatus, DayStatusCategory> = {
+  [DayStatus.Present]: DayStatusCategory.Present,
+  [DayStatus.UnexcusedAbsence]: DayStatusCategory.Unexcused,
+  [DayStatus.ExcusedPaidAbsence]: DayStatusCategory.Excused,
+  [DayStatus.ExcusedUnpaidAbsence]: DayStatusCategory.Excused,
+  [DayStatus.UnpaidLeave]: DayStatusCategory.Excused,
+  [DayStatus.AnnualLeave]: DayStatusCategory.Excused,
+  [DayStatus.OnDemandLeave]: DayStatusCategory.Excused,
+  [DayStatus.OccasionalLeave]: DayStatusCategory.Excused,
+  [DayStatus.MaternityLeave]: DayStatusCategory.Excused,
+  [DayStatus.ParentalLeave]: DayStatusCategory.Excused,
+  [DayStatus.PaternityLeave]: DayStatusCategory.Excused,
+  [DayStatus.ChildcareLeave]: DayStatusCategory.Excused,
+  [DayStatus.CareLeave]: DayStatusCategory.Excused,
+  [DayStatus.SickLeave]: DayStatusCategory.Excused,
+  [DayStatus.RehabilitationBenefit]: DayStatusCategory.Excused,
+  [DayStatus.HolidayCompDay]: DayStatusCategory.Excused,
+}
+
+export const DAY_STATUS_GROUP_LABELS = {
+  present: 'Obecność',
+  unexcused: 'Nieusprawiedliwiona',
+  excusedAbsences: 'Nieobecności usprawiedliwione',
+  leave: 'Urlopy',
+  other: 'Inne',
+} as const
+
+export type DayStatusGroupKey = keyof typeof DAY_STATUS_GROUP_LABELS
+
+export const DAY_STATUS_GROUPS: { groupKey: DayStatusGroupKey; statuses: DayStatus[] }[] = [
+  { groupKey: 'present', statuses: [DayStatus.Present] },
+  { groupKey: 'unexcused', statuses: [DayStatus.UnexcusedAbsence] },
+  {
+    groupKey: 'excusedAbsences',
+    statuses: [DayStatus.ExcusedPaidAbsence, DayStatus.ExcusedUnpaidAbsence],
+  },
+  {
+    groupKey: 'leave',
+    statuses: [
+      DayStatus.UnpaidLeave,
+      DayStatus.AnnualLeave,
+      DayStatus.OnDemandLeave,
+      DayStatus.OccasionalLeave,
+      DayStatus.MaternityLeave,
+      DayStatus.ParentalLeave,
+      DayStatus.PaternityLeave,
+      DayStatus.ChildcareLeave,
+    ],
+  },
+  {
+    groupKey: 'other',
+    statuses: [
+      DayStatus.CareLeave,
+      DayStatus.SickLeave,
+      DayStatus.RehabilitationBenefit,
+      DayStatus.HolidayCompDay,
+    ],
+  },
+]
+
+export function getDayStatusCategory(status: DayStatus): DayStatusCategory {
+  return DAY_STATUS_TO_CATEGORY[status]
+}
+
+export function getDayStatusLabel(status: DayStatus): string {
+  return DAY_STATUS_LABELS[status]
+}
+
+export function isPresent(status: DayStatus | null | undefined): boolean {
+  return status == null || status === DayStatus.Present
+}
+
+export function isUnexcused(status: DayStatus): boolean {
+  return getDayStatusCategory(status) === DayStatusCategory.Unexcused
+}
+
+export function isExcused(status: DayStatus): boolean {
+  return getDayStatusCategory(status) === DayStatusCategory.Excused
+}
 
 export interface DayRecord {
   date: string // ISO 'YYYY-MM-DD'
@@ -41,6 +158,12 @@ export interface Employee {
   position: string
   company: Company
   dayRecords: DayRecord[]
+}
+
+export function employeeHasUnexcusedAbsence(employee: Employee): boolean {
+  return employee.dayRecords.some(
+    (record) => record.status != null && isUnexcused(record.status),
+  )
 }
 
 // ── Work dimension → daily hours map ─────────────────────────────────────────
@@ -74,7 +197,7 @@ let _employees: Employee[] = [
     firstName: 'Andrzej',
     lastName: 'Kowalski',
     pesel: '85042312345',
-    contractType: 'Umowa o pracę',
+    contractType: ContractType.EmploymentContract,
     workDimension: '1',
     startHour: '08:00',
     endHour: '16:00',
@@ -88,7 +211,7 @@ let _employees: Employee[] = [
     firstName: 'Anna',
     lastName: 'Nowak',
     pesel: '92061598765',
-    contractType: 'Umowa zlecenie',
+    contractType: ContractType.EmploymentContract,
     workDimension: '1/2',
     startHour: '08:00',
     endHour: '12:00',
@@ -96,7 +219,7 @@ let _employees: Employee[] = [
     position: 'Specjalista',
     company: 'Spółka Serwis',
     dayRecords: [
-      { date: '2026-06-02', status: 'Nieobecność nieusprawiedliwiona' },
+      { date: '2026-06-02', status: DayStatus.UnexcusedAbsence },
     ],
   },
 ]

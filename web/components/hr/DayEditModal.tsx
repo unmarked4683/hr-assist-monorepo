@@ -3,22 +3,16 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useApp } from "./AppContext";
-import { DayStatus, formatPolishDate, Employee } from "@/lib/hr-data";
-
-const STATUS_OPTIONS: DayStatus[] = [
-  "Obecność",
-  "Nieobecność nieusprawiedliwiona",
-  "Urlop wypoczynkowy",
-  "Urlop na żądanie",
-  "Urlop macierzyński",
-  "Urlop wychowawczy",
-  "Urlop bezpłatny",
-  "Choroba",
-  "Opieka",
-  "Zwolnienie płatne",
-  "Zwolnienie niepłatne",
-  "Służba wojskowa",
-];
+import {
+  DayStatus,
+  DAY_STATUS_GROUPS,
+  DAY_STATUS_GROUP_LABELS,
+  formatPolishDate,
+  getDayStatusLabel,
+  isPresent,
+  calcShiftHours,
+  Employee,
+} from "@/lib/hr-data";
 
 export function DayEditModal({ employee }: { employee: Employee }) {
   const { isDayEditModalOpen, editingDate, closeDayEditModal, saveDayRecord } =
@@ -26,15 +20,15 @@ export function DayEditModal({ employee }: { employee: Employee }) {
 
   const existing = editingDate
     ? (employee.dayRecords.find((d) => d.date === editingDate)?.status ??
-      "Obecność")
-    : "Obecność";
+      DayStatus.Present)
+    : DayStatus.Present;
 
-  const [status, setStatus] = useState<DayStatus>(existing as DayStatus);
+  const [status, setStatus] = useState<DayStatus>(existing);
 
   useEffect(() => {
     if (isDayEditModalOpen && editingDate) {
       const s = employee.dayRecords.find((d) => d.date === editingDate)?.status;
-      setStatus((s ?? "Obecność") as DayStatus);
+      setStatus(s ?? DayStatus.Present);
     }
   }, [isDayEditModalOpen, editingDate, employee.dayRecords]);
 
@@ -46,11 +40,8 @@ export function DayEditModal({ employee }: { employee: Employee }) {
   const year = parseInt(yearStr, 10);
   const dateDisplay = formatPolishDate(day, month, year);
 
-  const isPresent = status === "Obecność";
-  const hoursDisplay = isPresent
-    ? `Godziny pracy: ${employee.startHour} - ${employee.endHour} (Realny czas: ${
-        parseInt(employee.endHour) - parseInt(employee.startHour)
-      }h)`
+  const hoursDisplay = isPresent(status)
+    ? `Godziny pracy: ${employee.startHour} - ${employee.endHour} (Realny czas: ${calcShiftHours(employee.startHour, employee.endHour)}h)`
     : "Godziny pracy: Brak (Realny czas: 0h)";
 
   const handleSave = () => {
@@ -66,7 +57,6 @@ export function DayEditModal({ employee }: { employee: Employee }) {
       }}
     >
       <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden">
-        {/* Header */}
         <div className="flex items-center justify-end px-5 pt-4 pb-2 shrink-0">
           <button
             onClick={closeDayEditModal}
@@ -78,12 +68,10 @@ export function DayEditModal({ employee }: { employee: Employee }) {
         </div>
 
         <div className="px-6 pb-2 flex flex-col gap-5">
-          {/* Row 1: Date */}
           <h2 className="text-xl font-bold text-foreground text-center">
             {dateDisplay}
           </h2>
 
-          {/* Row 2: Status dropdown */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-muted-foreground">
               Status
@@ -93,19 +81,26 @@ export function DayEditModal({ employee }: { employee: Employee }) {
               onChange={(e) => setStatus(e.target.value as DayStatus)}
               className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition appearance-none cursor-pointer"
             >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s}>{s}</option>
+              {DAY_STATUS_GROUPS.map(({ groupKey, statuses }) => (
+                <optgroup
+                  key={groupKey}
+                  label={DAY_STATUS_GROUP_LABELS[groupKey]}
+                >
+                  {statuses.map((s) => (
+                    <option key={s} value={s}>
+                      {getDayStatusLabel(s)}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
 
-          {/* Row 3: Time readout */}
           <div className="px-3 py-2.5 rounded-lg bg-muted/50 border border-border">
             <p className="text-sm text-muted-foreground">{hoursDisplay}</p>
           </div>
         </div>
 
-        {/* Row 4: Action */}
         <div className="px-6 pb-6 pt-4 shrink-0">
           <button
             onClick={handleSave}
