@@ -3,38 +3,25 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../AppContext'
 import { Modal, ModalHeader, ModalFooter } from '../shared/Modal'
-import { DayStatus, formatPolishDate, Employee } from '@/lib/hr-data'
+import { DAY_STATUS_OPTIONS, PRESENT_STATUS } from '@/lib/constants/attendance'
+import { formatPolishDate } from '@/lib/domain/dates'
+import { calcShiftHours } from '@/lib/domain/shift'
+import type { DayStatus, Employee, IsoDate } from '@/lib/types'
 
-const STATUS_OPTIONS: DayStatus[] = [
-  'Obecność',
-  'Nieobecność nieusprawiedliwiona',
-  'Urlop wypoczynkowy',
-  'Urlop na żądanie',
-  'Urlop macierzyński',
-  'Urlop wychowawczy',
-  'Urlop bezpłatny',
-  'Choroba',
-  'Opieka',
-  'Zwolnienie płatne',
-  'Zwolnienie niepłatne',
-  'Służba wojskowa',
-]
+const resolveStatus = (employee: Employee, date: IsoDate | null): DayStatus => {
+  if (!date) return PRESENT_STATUS
+  const record = employee.dayRecords.find(({ date: recordDate }) => recordDate === date)
+  return record?.status ?? PRESENT_STATUS
+}
 
-export function DayStatusModal({ employee }: { employee: Employee }) {
+export const DayStatusModal = ({ employee }: { employee: Employee }) => {
   const { isDayStatusModalOpen, editingDate, closeDayStatusModal, saveDayRecord } = useApp()
-
-  const existing = editingDate
-    ? (employee.dayRecords.find((d) => d.date === editingDate)?.status ?? 'Obecność')
-    : 'Obecność'
-
-  const [status, setStatus] = useState<DayStatus>(existing as DayStatus)
+  const [status, setStatus] = useState<DayStatus>(() => resolveStatus(employee, editingDate))
 
   useEffect(() => {
-    if (isDayStatusModalOpen && editingDate) {
-      const s = employee.dayRecords.find((d) => d.date === editingDate)?.status
-      setStatus((s ?? 'Obecność') as DayStatus)
-    }
-  }, [isDayStatusModalOpen, editingDate, employee.dayRecords])
+    if (!isDayStatusModalOpen || !editingDate) return
+    setStatus(resolveStatus(employee, editingDate))
+  }, [employee.dayRecords, editingDate, isDayStatusModalOpen])
 
   if (!isDayStatusModalOpen || !editingDate) return null
 
@@ -45,12 +32,14 @@ export function DayStatusModal({ employee }: { employee: Employee }) {
     parseInt(yearStr, 10),
   )
 
-  const isPresent = status === 'Obecność'
+  const isPresent = status === PRESENT_STATUS
   const hoursDisplay = isPresent
-    ? `Godziny pracy: ${employee.startHour} - ${employee.endHour} (Realny czas: ${
-        parseInt(employee.endHour) - parseInt(employee.startHour)
-      }h)`
+    ? `Godziny pracy: ${employee.startHour} - ${employee.endHour} (Realny czas: ${calcShiftHours(employee.startHour, employee.endHour)}h)`
     : 'Godziny pracy: Brak (Realny czas: 0h)'
+
+  const handleSave = () => {
+    void saveDayRecord(employee.id, editingDate, status)
+  }
 
   return (
     <Modal open={isDayStatusModalOpen} maxWidth="max-w-md">
@@ -63,11 +52,13 @@ export function DayStatusModal({ employee }: { employee: Employee }) {
           <label className="text-xs font-semibold text-muted-foreground">Status</label>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as DayStatus)}
+            onChange={(event) => setStatus(event.target.value as DayStatus)}
             className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition appearance-none cursor-pointer"
           >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s}>{s}</option>
+            {DAY_STATUS_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
             ))}
           </select>
         </div>
@@ -79,7 +70,7 @@ export function DayStatusModal({ employee }: { employee: Employee }) {
 
       <ModalFooter className="px-6 pb-6 pt-4">
         <button
-          onClick={() => saveDayRecord(employee.id, editingDate, status)}
+          onClick={handleSave}
           className="w-full h-11 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all shadow-sm"
         >
           Aktualizuj

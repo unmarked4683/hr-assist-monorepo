@@ -1,8 +1,8 @@
 'use client'
 
-import { RowStatus } from '@/lib/attendance'
+import type { RowStatus, ListAttendanceStatus } from '@/lib/types'
 
-type ListStatus = 'ok-list' | 'action-required'
+type ListStatus = ListAttendanceStatus
 
 interface AttendanceStatusBadgeProps {
   variant: 'list'

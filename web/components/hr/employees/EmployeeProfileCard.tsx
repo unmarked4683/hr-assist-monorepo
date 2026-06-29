@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil, FileText } from "lucide-react";
-import { Employee } from "@/lib/hr-data";
+import type { Employee } from '@/lib/types'
 import { useApp } from "../AppContext";
 import { MonthYearPicker } from "../shared/MonthYearPicker";
 

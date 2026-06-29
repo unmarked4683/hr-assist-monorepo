@@ -2,10 +2,10 @@
 
 import { use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useApp } from '@/components/hr/AppContext'
 import { EmployeeTimesheetPage } from '@/components/hr/employees/EmployeeTimesheetPage'
 import { DayStatusModal } from '@/components/hr/attendance/DayStatusModal'
 import { ReportGenerateModal } from '@/components/hr/reports/ReportGenerateModal'
+import { useEmployee } from '@/lib/hooks/useEmployee'
 
 export default function EmployeeDetailPage({
   params,
@@ -14,14 +14,13 @@ export default function EmployeeDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const { getEmployee } = useApp()
-  const employee = getEmployee(id)
+  const { employee, isLoading } = useEmployee(id)
 
   useEffect(() => {
-    if (!employee) router.replace('/employees')
-  }, [employee, router])
+    if (!isLoading && !employee) router.replace('/employees')
+  }, [employee, isLoading, router])
 
-  if (!employee) return null
+  if (isLoading || !employee) return null
 
   return (
     <>

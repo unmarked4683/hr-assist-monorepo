@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Users, Sun, Moon, Monitor, ChevronRight } from 'lucide-react'
-import { useApp, Theme } from '../AppContext'
+import { useApp } from '../AppContext'
+import type { Theme } from '@/lib/types'
 
 export function Sidebar() {
   const { theme, setTheme } = useApp()

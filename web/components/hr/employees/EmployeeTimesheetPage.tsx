@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Employee } from '@/lib/hr-data'
+import { getInitialTimesheetPeriod } from '@/lib/domain/dates'
+import type { Employee } from '@/lib/types'
 import { useApp } from '../AppContext'
 import { AppLayout } from '../layout/AppLayout'
-import { getInitialPeriod } from '../shared/MonthYearPicker'
 import { EmployeeProfileCard } from './EmployeeProfileCard'
 import { TimesheetTable } from './TimesheetTable'
 
@@ -14,12 +14,12 @@ interface EmployeeTimesheetPageProps {
   employee: Employee
 }
 
-export function EmployeeTimesheetPage({ employee }: EmployeeTimesheetPageProps) {
+export const EmployeeTimesheetPage = ({ employee }: EmployeeTimesheetPageProps) => {
   const router = useRouter()
   const { openDayStatusModal } = useApp()
-  const [period, setPeriod] = useState(getInitialPeriod)
+  const [period, setPeriod] = useState(getInitialTimesheetPeriod)
 
-  function handlePeriodChange(month: number, year: number) {
+  const handlePeriodChange = (month: number, year: number) => {
     setPeriod({ month, year })
   }
 

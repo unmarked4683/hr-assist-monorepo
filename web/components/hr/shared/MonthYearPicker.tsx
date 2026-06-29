@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { MONTH_NAMES_NOM } from '@/lib/hr-data'
+import { MONTH_NAMES_NOM } from '@/lib/constants/dates'
 import { cn } from '@/lib/utils'
 
 interface MonthYearPickerProps {
@@ -109,11 +109,4 @@ export function MonthYearPicker({
       </button>
     </div>
   )
-}
-
-export function getInitialPeriod() {
-  const now = new Date()
-  const year = Math.max(now.getFullYear(), 2026)
-  const month = now.getFullYear() < 2026 ? 1 : now.getMonth() + 1
-  return { month, year }
 }

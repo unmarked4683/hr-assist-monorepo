@@ -1,48 +1,32 @@
-"use client";
+'use client'
 
-import {
-  Employee,
-  getDaysInMonth,
-  getDayOfWeek,
-  isWeekend,
-  calcShiftHours,
-} from "@/lib/hr-data";
-import {
-  getRowStatus,
-  getRealHours,
-  isDayAbsent,
-  getTodayStr,
-} from "@/lib/attendance";
-import { AttendanceStatusBadge } from "../shared/AttendanceStatusBadge";
+import { getDaysInMonth, getDayOfWeek, getTodayIsoDate, isWeekend, toIsoDate } from '@/lib/domain/dates'
+import { calcShiftHours } from '@/lib/domain/shift'
+import { getRealHours, getRowStatus, isDayAbsent } from '@/lib/domain/attendance'
+import type { Employee, IsoDate } from '@/lib/types'
+import { AttendanceStatusBadge } from '../shared/AttendanceStatusBadge'
 
 interface TimesheetTableProps {
-  employee: Employee;
-  month: number;
-  year: number;
-  onDayClick: (dateStr: string) => void;
+  employee: Employee
+  month: number
+  year: number
+  onDayClick: (date: IsoDate) => void
 }
 
-export function TimesheetTable({
-  employee,
-  month,
-  year,
-  onDayClick,
-}: TimesheetTableProps) {
-  const daysCount = getDaysInMonth(year, month);
-  const todayStr = getTodayStr();
-  const nomHours = `${calcShiftHours(employee.startHour, employee.endHour)}h`;
+export const TimesheetTable = ({ employee, month, year, onDayClick }: TimesheetTableProps) => {
+  const daysCount = getDaysInMonth(year, month)
+  const todayStr = getTodayIsoDate()
+  const nomHours = `${calcShiftHours(employee.startHour, employee.endHour)}h`
 
-  const days = Array.from({ length: daysCount }, (_, i) => {
-    const d = i + 1;
-    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const weekend = isWeekend(year, month, d);
-    const isToday = dateStr === todayStr;
-    const isFuture = dateStr > todayStr;
-    const rowStatus = weekend
-      ? null
-      : getRowStatus(dateStr, employee, todayStr);
-    return { d, dateStr, weekend, rowStatus, isToday, isFuture };
-  });
+  const days = Array.from({ length: daysCount }, (_, index) => {
+    const day = index + 1
+    const dateStr = toIsoDate(year, month, day)
+    const weekend = isWeekend(year, month, day)
+    const isToday = dateStr === todayStr
+    const isFuture = dateStr > todayStr
+    const rowStatus = weekend ? null : getRowStatus(dateStr, employee, todayStr)
+    return { day, dateStr, weekend, rowStatus, isToday, isFuture }
+  })
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
@@ -57,16 +41,14 @@ export function TimesheetTable({
         </colgroup>
         <thead>
           <tr className="border-b border-border bg-muted/50">
-            {["Dz.", "Tyg.", "Godziny pracy", "Nom.", "Real.", "Status"].map(
-              (label) => (
-                <th
-                  key={label}
-                  className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide"
-                >
-                  {label}
-                </th>
-              ),
-            )}
+            {['Dz.', 'Tyg.', 'Godziny pracy', 'Nom.', 'Real.', 'Status'].map((label) => (
+              <th
+                key={label}
+                className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide"
+              >
+                {label}
+              </th>
+            ))}
           </tr>
         </thead>
       </table>
@@ -82,77 +64,64 @@ export function TimesheetTable({
             <col className="w-24" />
           </colgroup>
           <tbody>
-            {days.map(
-              ({ d, dateStr, weekend, rowStatus, isToday, isFuture }, i) => {
-                const isAbsent = !weekend && isDayAbsent(dateStr, employee);
+            {days.map(({ day, dateStr, weekend, rowStatus, isToday, isFuture }, index) => {
+              const isAbsent = !weekend && isDayAbsent(dateStr, employee)
 
-                return (
-                  <tr
-                    key={dateStr}
-                    onClick={() => !weekend && onDayClick(dateStr)}
-                    className={`
+              return (
+                <tr
+                  key={dateStr}
+                  onClick={() => !weekend && onDayClick(dateStr)}
+                  className={`
                     border-b border-border last:border-0 transition-colors
-                    ${isToday ? "border-l-4 border-l-red-500" : ""}
+                    ${isToday ? 'border-l-4 border-l-red-500' : ''}
                     ${
                       weekend
-                        ? "bg-muted/20 text-muted-foreground cursor-default"
+                        ? 'bg-muted/20 text-muted-foreground cursor-default'
                         : isAbsent
-                          ? "animate-pulse-red-row cursor-pointer hover:bg-primary/5"
+                          ? 'animate-pulse-red-row cursor-pointer hover:bg-primary/5'
                           : isFuture
-                            ? "bg-muted/10 text-muted-foreground/60 cursor-pointer hover:bg-muted/20"
-                            : i % 2 === 0
-                              ? "bg-card cursor-pointer hover:bg-primary/5"
-                              : "bg-muted/20 cursor-pointer hover:bg-primary/5"
+                            ? 'bg-muted/10 text-muted-foreground/60 cursor-pointer hover:bg-muted/20'
+                            : index % 2 === 0
+                              ? 'bg-card cursor-pointer hover:bg-primary/5'
+                              : 'bg-muted/20 cursor-pointer hover:bg-primary/5'
                     }
                   `}
-                  >
-                    <td className="px-3 py-2.5 text-center font-medium tabular-nums">
-                      <span className="inline-flex items-center justify-center gap-1">
-                        {d}
-                        {isToday && (
-                          <span className="text-[10px] font-bold leading-none px-1 py-0.5 rounded bg-red-500 text-white tracking-wide">
-                            DZIŚ
-                          </span>
-                        )}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      {getDayOfWeek(year, month, d)}
-                    </td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">
-                      {weekend ? (
-                        <span className="text-xs text-muted-foreground/60 italic">
-                          wolne
+                >
+                  <td className="px-3 py-2.5 text-center font-medium tabular-nums">
+                    <span className="inline-flex items-center justify-center gap-1">
+                      {day}
+                      {isToday && (
+                        <span className="text-[10px] font-bold leading-none px-1 py-0.5 rounded bg-red-500 text-white tracking-wide">
+                          DZIŚ
                         </span>
-                      ) : (
-                        `${employee.startHour} – ${employee.endHour}`
                       )}
-                    </td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">
-                      {weekend ? "—" : nomHours}
-                    </td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">
-                      {weekend ? "—" : getRealHours(dateStr, employee)}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      {weekend ? (
-                        <span className="text-xs text-muted-foreground/60 italic">
-                          —
-                        </span>
-                      ) : (
-                        <AttendanceStatusBadge
-                          variant="table"
-                          status={rowStatus!}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                );
-              },
-            )}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center">{getDayOfWeek(year, month, day)}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums">
+                    {weekend ? (
+                      <span className="text-xs text-muted-foreground/60 italic">wolne</span>
+                    ) : (
+                      `${employee.startHour} – ${employee.endHour}`
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-center tabular-nums">{weekend ? '—' : nomHours}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums">
+                    {weekend ? '—' : getRealHours(dateStr, employee)}
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    {weekend ? (
+                      <span className="text-xs text-muted-foreground/60 italic">—</span>
+                    ) : (
+                      rowStatus && <AttendanceStatusBadge variant="table" status={rowStatus} />
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
     </div>
-  );
+  )
 }

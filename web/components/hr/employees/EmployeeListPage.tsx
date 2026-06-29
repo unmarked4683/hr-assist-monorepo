@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Plus, MapPin } from 'lucide-react'
 import { useApp } from '../AppContext'
-import { employeeNeedsAction } from '@/lib/attendance'
+import { employeeNeedsAction, toListAttendanceStatus } from '@/lib/domain/attendance'
 import { AppLayout } from '../layout/AppLayout'
 import { AttendanceStatusBadge } from '../shared/AttendanceStatusBadge'
 
@@ -33,7 +33,7 @@ function ColumnGroup() {
 
 export function EmployeeListPage() {
   const router = useRouter()
-  const { employees, openCreateEmployeeForm } = useApp()
+  const { employees, isEmployeesReady, openCreateEmployeeForm } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
 
   const filteredEmployees = employees.filter((emp) => {
@@ -93,14 +93,22 @@ export function EmployeeListPage() {
             <table className="w-full text-sm table-fixed">
               <ColumnGroup />
               <tbody>
-                {filteredEmployees.length === 0 && (
+                {!isEmployeesReady && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12 text-muted-foreground text-sm">
+                      Ładowanie pracowników...
+                    </td>
+                  </tr>
+                )}
+                {isEmployeesReady && filteredEmployees.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-12 text-muted-foreground text-sm">
                       Brak pracowników spełniających kryteria wyszukiwania.
                     </td>
                   </tr>
                 )}
-                {filteredEmployees.map((emp, i) => {
+                {isEmployeesReady &&
+                  filteredEmployees.map((emp, i) => {
                   const needsAction = employeeNeedsAction(emp)
                   return (
                     <tr
@@ -127,7 +135,7 @@ export function EmployeeListPage() {
                       <td className="px-3 py-2.5 text-center">
                         <AttendanceStatusBadge
                           variant="list"
-                          status={needsAction ? 'action-required' : 'ok-list'}
+                          status={toListAttendanceStatus(needsAction)}
                         />
                       </td>
                     </tr>

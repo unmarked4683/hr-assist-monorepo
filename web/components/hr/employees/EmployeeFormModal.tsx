@@ -5,92 +5,81 @@ import { Building2, Settings2 } from 'lucide-react'
 import { useApp } from '../AppContext'
 import { Modal, ModalHeader, ModalFooter } from '../shared/Modal'
 import {
-  ContractType,
-  WorkDimension,
-  Location,
-  Company,
-  Employee,
-  parsePeselBirthdate,
+  COMPANY_OPTIONS,
   DIMENSION_HOURS,
-} from '@/lib/hr-data'
-import {
-  FormSelect,
-  HourPicker,
-  AutocompleteInput,
-  DimensionSelect,
-  shiftHour,
-  isOvernight,
-} from './employee-form-controls'
+  EMPLOYMENT_CONTRACT,
+  CONTRACT_TYPE_OPTIONS,
+  LOCATIONS,
+  POSITION_SUGGESTIONS,
+} from '@/lib/constants/employee'
+import { parsePeselBirthdate } from '@/lib/domain/pesel'
+import { isOvernight, shiftHour } from '@/lib/domain/shift'
+import type { Company, Employee, EmployeeInput, Location, WorkDimension } from '@/lib/types'
+import { FormSelect, HourPicker, AutocompleteInput, DimensionSelect } from './employee-form-controls'
 
-const EMPLOYMENT_CONTRACT: ContractType = 'Umowa o pracę'
-const CONTRACT_TYPE_OPTIONS: { value: ContractType; label: string }[] = [
-  { value: EMPLOYMENT_CONTRACT, label: EMPLOYMENT_CONTRACT },
-]
-const COMPANY_OPTIONS: { value: Company; label: string }[] = [
-  { value: 'Spółka Produkcja', label: 'Spółka Produkcja' },
-  { value: 'Spółka Serwis', label: 'Spółka Serwis' },
-  { value: 'Spółka Marka Własna', label: 'Spółka Marka Własna' },
-]
-const POSITION_SUGGESTIONS = ['Brygadzista', 'Specjalista', 'Kierownik', 'Pracownik', 'Operator', 'Technik', 'Analityk', 'Manager']
+type EmployeeFormState = EmployeeInput
 
-function buildInitial(emp?: Employee | null) {
-  return {
-    firstName: emp?.firstName ?? '',
-    lastName: emp?.lastName ?? '',
-    pesel: emp?.pesel ?? '',
-    contractType: EMPLOYMENT_CONTRACT,
-    workDimension: (emp?.workDimension ?? '1') as WorkDimension,
-    startHour: emp?.startHour ?? '08:00',
-    endHour: emp?.endHour ?? '16:00',
-    location: (emp?.location ?? 'Biuro') as Location,
-    position: emp?.position ?? '',
-    company: (emp?.company ?? 'Spółka Produkcja') as Company,
-  }
-}
+const buildInitial = (employee?: Employee | null): EmployeeFormState => ({
+  firstName: employee?.firstName ?? '',
+  lastName: employee?.lastName ?? '',
+  pesel: employee?.pesel ?? '',
+  contractType: EMPLOYMENT_CONTRACT,
+  workDimension: employee?.workDimension ?? '1',
+  startHour: employee?.startHour ?? '08:00',
+  endHour: employee?.endHour ?? '16:00',
+  location: employee?.location ?? 'Biuro',
+  position: employee?.position ?? '',
+  company: employee?.company ?? 'Spółka Produkcja',
+})
 
-export function EmployeeFormModal() {
+export const EmployeeFormModal = () => {
   const { isEmployeeFormOpen, editingEmployee, closeEmployeeForm, saveEmployee } = useApp()
-  const isEdit = !!editingEmployee
+  const isEdit = Boolean(editingEmployee)
 
-  const [form, setForm] = useState(buildInitial(editingEmployee))
-  const [initialSnapshot, setInitialSnapshot] = useState(buildInitial(editingEmployee))
+  const [form, setForm] = useState<EmployeeFormState>(() => buildInitial(editingEmployee))
+  const [initialSnapshot, setInitialSnapshot] = useState<EmployeeFormState>(() =>
+    buildInitial(editingEmployee),
+  )
 
   useEffect(() => {
-    if (isEmployeeFormOpen) {
-      const init = buildInitial(editingEmployee)
-      setForm(init)
-      setInitialSnapshot(init)
-    }
+    if (!isEmployeeFormOpen) return
+    const initial = buildInitial(editingEmployee)
+    setForm(initial)
+    setInitialSnapshot(initial)
   }, [isEmployeeFormOpen, editingEmployee])
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(initialSnapshot)
 
-  function set<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
-    setForm((f) => ({ ...f, [key]: val }))
+  const setField = <K extends keyof EmployeeFormState>(key: K, value: EmployeeFormState[K]) => {
+    setForm((current) => ({ ...current, [key]: value }))
   }
 
-  function handleStartChange(h: string) {
+  const handleStartChange = (hour: string) => {
     const hours = DIMENSION_HOURS[form.workDimension] ?? 8
-    setForm((f) => ({ ...f, startHour: h, endHour: shiftHour(h, hours) }))
+    setForm((current) => ({ ...current, startHour: hour, endHour: shiftHour(hour, hours) }))
   }
 
-  function handleEndChange(h: string) {
+  const handleEndChange = (hour: string) => {
     const hours = DIMENSION_HOURS[form.workDimension] ?? 8
-    setForm((f) => ({ ...f, endHour: h, startHour: shiftHour(h, -hours) }))
+    setForm((current) => ({ ...current, endHour: hour, startHour: shiftHour(hour, -hours) }))
   }
 
-  function handleDimensionChange(d: WorkDimension) {
-    const hours = DIMENSION_HOURS[d] ?? 8
-    setForm((f) => ({ ...f, workDimension: d, endHour: shiftHour(form.startHour, hours) }))
+  const handleDimensionChange = (dimension: WorkDimension) => {
+    const hours = DIMENSION_HOURS[dimension] ?? 8
+    setForm((current) => ({
+      ...current,
+      workDimension: dimension,
+      endHour: shiftHour(current.startHour, hours),
+    }))
   }
 
   const birthdate = parsePeselBirthdate(form.pesel)
   const overnight = isOvernight(form.startHour, form.endHour)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
     if (isEdit && !isDirty) return
-    saveEmployee({ ...form, contractType: EMPLOYMENT_CONTRACT }, editingEmployee?.id)
+    void saveEmployee({ ...form, contractType: EMPLOYMENT_CONTRACT }, editingEmployee?.id)
   }
 
   return (
@@ -109,7 +98,7 @@ export function EmployeeFormModal() {
               <input
                 type="text"
                 value={form.firstName}
-                onChange={(e) => set('firstName', e.target.value)}
+                onChange={(event) => setField('firstName', event.target.value)}
                 required
                 className="h-9 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
               />
@@ -119,7 +108,7 @@ export function EmployeeFormModal() {
               <input
                 type="text"
                 value={form.lastName}
-                onChange={(e) => set('lastName', e.target.value)}
+                onChange={(event) => setField('lastName', event.target.value)}
                 required
                 className="h-9 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
               />
@@ -134,7 +123,7 @@ export function EmployeeFormModal() {
                 inputMode="numeric"
                 maxLength={11}
                 value={form.pesel}
-                onChange={(e) => set('pesel', e.target.value.replace(/\D/g, ''))}
+                onChange={(event) => setField('pesel', event.target.value.replace(/\D/g, ''))}
                 className="h-9 px-3 rounded-lg border border-input bg-background text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
               />
             </div>
@@ -151,43 +140,37 @@ export function EmployeeFormModal() {
               label="Typ umowy"
               value={form.contractType}
               options={CONTRACT_TYPE_OPTIONS}
-              onChange={(value) => set('contractType', value)}
+              onChange={(value) => setField('contractType', value)}
               locked
             />
-
             <DimensionSelect value={form.workDimension} onChange={handleDimensionChange} />
-
             <HourPicker
               value={form.startHour}
               onChange={handleStartChange}
               label="Godzina rozpoczęcia"
               hint={overnight ? 'Zmiana nocna' : undefined}
             />
-            <HourPicker
-              value={form.endHour}
-              onChange={handleEndChange}
-              label="Godzina zakończenia"
-            />
+            <HourPicker value={form.endHour} onChange={handleEndChange} label="Godzina zakończenia" />
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-muted-foreground">Lokalizacja</label>
               <div className="flex h-9 rounded-lg border border-input bg-muted/30 p-0.5">
-                {(['Biuro', 'Hala'] as Location[]).map((loc) => (
+                {LOCATIONS.map((location) => (
                   <button
-                    key={loc}
+                    key={location}
                     type="button"
-                    onClick={() => set('location', loc)}
+                    onClick={() => setField('location', location as Location)}
                     className={`flex-1 flex items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-all select-none ${
-                      form.location === loc
+                      form.location === location
                         ? 'bg-card shadow-sm text-foreground'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
-                    aria-pressed={form.location === loc}
+                    aria-pressed={form.location === location}
                   >
-                    {loc === 'Biuro' ? <Building2 size={13} /> : <Settings2 size={13} />}
-                    {loc}
+                    {location === 'Biuro' ? <Building2 size={13} /> : <Settings2 size={13} />}
+                    {location}
                   </button>
                 ))}
               </div>
@@ -196,16 +179,16 @@ export function EmployeeFormModal() {
             <AutocompleteInput
               label="Stanowisko"
               value={form.position}
-              onChange={(v) => set('position', v)}
+              onChange={(value) => setField('position', value)}
               suggestions={POSITION_SUGGESTIONS}
               placeholder="np. Brygadzista"
             />
 
-            <FormSelect
+            <FormSelect<Company>
               label="Firma / Byt prawny"
               value={form.company}
               options={COMPANY_OPTIONS}
-              onChange={(value) => set('company', value)}
+              onChange={(value) => setField('company', value)}
             />
           </div>
         </div>

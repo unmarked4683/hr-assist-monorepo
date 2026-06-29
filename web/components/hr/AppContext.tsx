@@ -1,43 +1,49 @@
 'use client'
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import {
-  Employee,
-  getEmployees,
-  getEmployeeById,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
+import { login as loginRequest, logout as logoutRequest } from '@/lib/api/auth'
+import {
   createEmployee,
-  updateEmployeeData,
+  fetchEmployees,
+  updateEmployee,
   upsertDayRecord,
-  DayStatus,
-} from '@/lib/hr-data'
-
-export type Theme = 'light' | 'dark' | 'system'
+} from '@/lib/api/employees'
+import type { DayStatus, Employee, EmployeeInput, IsoDate, Theme } from '@/lib/types'
 
 interface AppContextValue {
   isLoggedIn: boolean
   loginError: boolean
-  login: (email: string, password: string) => void
-  logout: () => void
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
 
   theme: Theme
-  setTheme: (t: Theme) => void
+  setTheme: (theme: Theme) => void
 
   employees: Employee[]
-  refreshEmployees: () => void
-  getEmployee: (id: string) => Employee | undefined
+  isEmployeesReady: boolean
+  refreshEmployees: () => Promise<void>
+  getEmployee: (id: string) => Employee | null
 
   isEmployeeFormOpen: boolean
   editingEmployee: Employee | null
   openCreateEmployeeForm: () => void
-  openEditEmployeeForm: (emp: Employee) => void
+  openEditEmployeeForm: (employee: Employee) => void
   closeEmployeeForm: () => void
-  saveEmployee: (data: Omit<Employee, 'id' | 'dayRecords'>, id?: string) => void
+  saveEmployee: (input: EmployeeInput, id?: string) => Promise<void>
 
   isDayStatusModalOpen: boolean
-  editingDate: string | null
-  openDayStatusModal: (date: string) => void
+  editingDate: IsoDate | null
+  openDayStatusModal: (date: IsoDate) => void
   closeDayStatusModal: () => void
-  saveDayRecord: (employeeId: string, date: string, status: DayStatus) => void
+  saveDayRecord: (employeeId: string, date: IsoDate, status: DayStatus) => Promise<void>
 
   isReportModalOpen: boolean
   openReportModal: () => void
@@ -46,24 +52,35 @@ interface AppContextValue {
 
 const AppCtx = createContext<AppContextValue | null>(null)
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
+export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loginError, setLoginError] = useState(false)
   const [theme, setThemeState] = useState<Theme>('system')
-  const [employees, setEmployees] = useState<Employee[]>(getEmployees())
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [isEmployeesReady, setIsEmployeesReady] = useState(false)
   const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [isDayStatusModalOpen, setIsDayStatusModalOpen] = useState(false)
-  const [editingDate, setEditingDate] = useState<string | null>(null)
+  const [editingDate, setEditingDate] = useState<IsoDate | null>(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
-  const setTheme = useCallback((t: Theme) => {
-    setThemeState(t)
-    const html = document.documentElement
+  const setTheme = useCallback((nextTheme: Theme) => {
+    setThemeState(nextTheme)
+    const { documentElement: html } = document
     html.classList.remove('light', 'dark')
-    if (t === 'light') html.classList.add('light')
-    else if (t === 'dark') html.classList.add('dark')
+    if (nextTheme === 'light') html.classList.add('light')
+    else if (nextTheme === 'dark') html.classList.add('dark')
   }, [])
+
+  const refreshEmployees = useCallback(async () => {
+    const data = await fetchEmployees()
+    setEmployees(data)
+    setIsEmployeesReady(true)
+  }, [])
+
+  useEffect(() => {
+    void refreshEmployees()
+  }, [refreshEmployees])
 
   useEffect(() => {
     const stored = localStorage.getItem('hr-theme') as Theme | null
@@ -74,33 +91,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('hr-theme', theme)
   }, [theme])
 
-  const login = useCallback((email: string, password: string) => {
-    if (email && password.length >= 4) {
+  const login = useCallback(async (email: string, password: string) => {
+    const { success } = await loginRequest({ email, password })
+    if (success) {
       setIsLoggedIn(true)
       setLoginError(false)
-    } else {
-      setLoginError(true)
-      setTimeout(() => setLoginError(false), 4000)
+      return
     }
+
+    setLoginError(true)
+    window.setTimeout(() => setLoginError(false), 4000)
   }, [])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await logoutRequest()
     setIsLoggedIn(false)
   }, [])
 
-  const refreshEmployees = useCallback(() => {
-    setEmployees([...getEmployees()])
-  }, [])
-
-  const getEmployee = useCallback((id: string) => getEmployeeById(id), [])
+  const getEmployee = useCallback(
+    (id: string): Employee | null => employees.find((employee) => employee.id === id) ?? null,
+    [employees],
+  )
 
   const openCreateEmployeeForm = useCallback(() => {
     setEditingEmployee(null)
     setIsEmployeeFormOpen(true)
   }, [])
 
-  const openEditEmployeeForm = useCallback((emp: Employee) => {
-    setEditingEmployee(emp)
+  const openEditEmployeeForm = useCallback((employee: Employee) => {
+    setEditingEmployee(employee)
     setIsEmployeeFormOpen(true)
   }, [])
 
@@ -110,19 +129,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const saveEmployee = useCallback(
-    (data: Omit<Employee, 'id' | 'dayRecords'>, id?: string) => {
-      if (id) {
-        updateEmployeeData(id, data)
-      } else {
-        createEmployee(data)
-      }
-      refreshEmployees()
+    async (input: EmployeeInput, id?: string) => {
+      if (id) await updateEmployee(id, input)
+      else await createEmployee(input)
+      await refreshEmployees()
       closeEmployeeForm()
     },
-    [refreshEmployees, closeEmployeeForm],
+    [closeEmployeeForm, refreshEmployees],
   )
 
-  const openDayStatusModal = useCallback((date: string) => {
+  const openDayStatusModal = useCallback((date: IsoDate) => {
     setEditingDate(date)
     setIsDayStatusModalOpen(true)
   }, [])
@@ -133,52 +149,77 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const saveDayRecord = useCallback(
-    (employeeId: string, date: string, status: DayStatus) => {
-      upsertDayRecord(employeeId, date, status)
-      refreshEmployees()
+    async (employeeId: string, date: IsoDate, status: DayStatus) => {
+      await upsertDayRecord(employeeId, date, status)
+      await refreshEmployees()
       closeDayStatusModal()
     },
-    [refreshEmployees, closeDayStatusModal],
+    [closeDayStatusModal, refreshEmployees],
   )
 
   const openReportModal = useCallback(() => setIsReportModalOpen(true), [])
   const closeReportModal = useCallback(() => setIsReportModalOpen(false), [])
 
-  return (
-    <AppCtx.Provider
-      value={{
-        isLoggedIn,
-        loginError,
-        login,
-        logout,
-        theme,
-        setTheme,
-        employees,
-        refreshEmployees,
-        getEmployee,
-        isEmployeeFormOpen,
-        editingEmployee,
-        openCreateEmployeeForm,
-        openEditEmployeeForm,
-        closeEmployeeForm,
-        saveEmployee,
-        isDayStatusModalOpen,
-        editingDate,
-        openDayStatusModal,
-        closeDayStatusModal,
-        saveDayRecord,
-        isReportModalOpen,
-        openReportModal,
-        closeReportModal,
-      }}
-    >
-      {children}
-    </AppCtx.Provider>
+  const value = useMemo<AppContextValue>(
+    () => ({
+      isLoggedIn,
+      loginError,
+      login,
+      logout,
+      theme,
+      setTheme,
+      employees,
+      isEmployeesReady,
+      refreshEmployees,
+      getEmployee,
+      isEmployeeFormOpen,
+      editingEmployee,
+      openCreateEmployeeForm,
+      openEditEmployeeForm,
+      closeEmployeeForm,
+      saveEmployee,
+      isDayStatusModalOpen,
+      editingDate,
+      openDayStatusModal,
+      closeDayStatusModal,
+      saveDayRecord,
+      isReportModalOpen,
+      openReportModal,
+      closeReportModal,
+    }),
+    [
+      closeDayStatusModal,
+      closeEmployeeForm,
+      closeReportModal,
+      editingDate,
+      editingEmployee,
+      employees,
+      getEmployee,
+      isDayStatusModalOpen,
+      isEmployeeFormOpen,
+      isEmployeesReady,
+      isLoggedIn,
+      isReportModalOpen,
+      login,
+      loginError,
+      logout,
+      openCreateEmployeeForm,
+      openDayStatusModal,
+      openEditEmployeeForm,
+      openReportModal,
+      refreshEmployees,
+      saveDayRecord,
+      saveEmployee,
+      setTheme,
+      theme,
+    ],
   )
+
+  return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>
 }
 
-export function useApp() {
-  const ctx = useContext(AppCtx)
-  if (!ctx) throw new Error('useApp must be used within AppProvider')
-  return ctx
+export const useApp = (): AppContextValue => {
+  const context = useContext(AppCtx)
+  if (!context) throw new Error('useApp must be used within AppProvider')
+  return context
 }
