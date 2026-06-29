@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -63,6 +64,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isDayStatusModalOpen, setIsDayStatusModalOpen] = useState(false)
   const [editingDate, setEditingDate] = useState<IsoDate | null>(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const isLoggedInRef = useRef(isLoggedIn)
+  isLoggedInRef.current = isLoggedIn
 
   const setTheme = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme)
@@ -73,14 +76,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   const refreshEmployees = useCallback(async () => {
-    const data = await fetchEmployees()
-    setEmployees(data)
-    setIsEmployeesReady(true)
+    setIsEmployeesReady(false)
+    try {
+      const data = await fetchEmployees()
+      if (!isLoggedInRef.current) return
+      setEmployees(data)
+    } catch {
+      if (!isLoggedInRef.current) return
+      setEmployees([])
+    } finally {
+      if (isLoggedInRef.current) setIsEmployeesReady(true)
+    }
   }, [])
 
   useEffect(() => {
+    if (!isLoggedIn) return
     void refreshEmployees()
-  }, [refreshEmployees])
+  }, [isLoggedIn, refreshEmployees])
 
   useEffect(() => {
     if (hasAuthSession()) setIsLoggedIn(true)
