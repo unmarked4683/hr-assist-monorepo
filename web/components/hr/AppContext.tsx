@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { login as loginRequest, logout as logoutRequest } from '@/lib/api/auth'
+import { login as loginRequest, logout as logoutRequest, hasAuthSession } from '@/lib/api/auth'
 import {
   createEmployee,
   fetchEmployees,
@@ -83,6 +83,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [refreshEmployees])
 
   useEffect(() => {
+    if (hasAuthSession()) setIsLoggedIn(true)
+  }, [])
+
+  useEffect(() => {
     const stored = localStorage.getItem('hr-theme') as Theme | null
     if (stored) setTheme(stored)
   }, [setTheme])
@@ -101,11 +105,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     setLoginError(true)
     window.setTimeout(() => setLoginError(false), 4000)
-  }, [])
-
-  const logout = useCallback(async () => {
-    await logoutRequest()
-    setIsLoggedIn(false)
   }, [])
 
   const getEmployee = useCallback(
@@ -159,6 +158,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const openReportModal = useCallback(() => setIsReportModalOpen(true), [])
   const closeReportModal = useCallback(() => setIsReportModalOpen(false), [])
+
+  const logout = useCallback(async () => {
+    await logoutRequest()
+    setIsLoggedIn(false)
+    setEmployees([])
+    setIsEmployeesReady(false)
+    setIsEmployeeFormOpen(false)
+    setEditingEmployee(null)
+    setIsDayStatusModalOpen(false)
+    setEditingDate(null)
+    setIsReportModalOpen(false)
+  }, [])
 
   const value = useMemo<AppContextValue>(
     () => ({

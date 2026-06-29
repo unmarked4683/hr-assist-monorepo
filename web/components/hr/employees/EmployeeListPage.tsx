@@ -89,10 +89,10 @@ export function EmployeeListPage() {
             </thead>
           </table>
 
-          <div className="flex-1 min-h-0 overflow-y-auto pb-8 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-8 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
             <table className="w-full text-sm table-fixed">
               <ColumnGroup />
-              <tbody>
+              <tbody className="hr-table-zebra">
                 {!isEmployeesReady && (
                   <tr>
                     <td colSpan={5} className="text-center py-12 text-muted-foreground text-sm">
@@ -108,17 +108,18 @@ export function EmployeeListPage() {
                   </tr>
                 )}
                 {isEmployeesReady &&
-                  filteredEmployees.map((emp, i) => {
+                  filteredEmployees.map((emp) => {
                   const needsAction = employeeNeedsAction(emp)
                   return (
                     <tr
                       key={emp.id}
                       onClick={() => router.push(`/employees/${emp.id}`)}
-                      className={`
-                        border-b border-border last:border-0 transition-colors cursor-pointer
-                        ${needsAction ? 'animate-pulse-red-row' : i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}
-                        hover:bg-primary/5
-                      `}
+                      className={[
+                        'hr-table-row hr-table-row-clickable',
+                        needsAction && 'animate-pulse-red-row',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                     >
                       <td className="px-3 py-2.5 text-center font-medium text-foreground">
                         {emp.firstName}
