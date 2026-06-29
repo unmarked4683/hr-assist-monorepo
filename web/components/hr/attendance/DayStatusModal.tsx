@@ -42,7 +42,7 @@ export const DayStatusModal = ({ employee }: { employee: Employee }) => {
   }
 
   return (
-    <Modal open={isDayStatusModalOpen} maxWidth="max-w-md">
+    <Modal open={isDayStatusModalOpen} onClose={closeDayStatusModal} maxWidth="max-w-md">
       <ModalHeader onClose={closeDayStatusModal} />
 
       <div className="px-6 pb-2 flex flex-col gap-5">

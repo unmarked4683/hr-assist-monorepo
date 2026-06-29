@@ -1,6 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
+import { useBlockBrowserBackWhileOpen } from '@/lib/hooks/use-block-browser-back'
 import { cn } from '@/lib/utils'
 
 const backdropStyle = {
@@ -10,6 +11,7 @@ const backdropStyle = {
 
 interface ModalProps {
   open: boolean
+  onClose: () => void
   children: React.ReactNode
   maxWidth?: string
   zIndex?: string
@@ -18,11 +20,14 @@ interface ModalProps {
 
 export function Modal({
   open,
+  onClose,
   children,
   maxWidth = 'max-w-md',
   zIndex = 'z-50',
   className,
 }: ModalProps) {
+  useBlockBrowserBackWhileOpen(open, onClose)
+
   if (!open) return null
 
   return (

@@ -27,7 +27,7 @@ export const ReportGenerateModal = () => {
   }
 
   return (
-    <Modal open={isReportModalOpen} maxWidth="max-w-sm">
+    <Modal open={isReportModalOpen} onClose={closeReportModal} maxWidth="max-w-sm">
       <ModalHeader title="Generuj raport" onClose={closeReportModal} />
 
       <div className="px-6 py-5 flex flex-col gap-4">

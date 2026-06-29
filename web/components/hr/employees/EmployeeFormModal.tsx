@@ -83,7 +83,7 @@ export const EmployeeFormModal = () => {
   }
 
   return (
-    <Modal open={isEmployeeFormOpen} maxWidth="max-w-2xl" zIndex="z-[60]">
+    <Modal open={isEmployeeFormOpen} onClose={closeEmployeeForm} maxWidth="max-w-2xl" zIndex="z-[60]">
       <ModalHeader
         title={isEdit ? 'Edytuj pracownika' : 'Dodaj pracownika'}
         onClose={closeEmployeeForm}
