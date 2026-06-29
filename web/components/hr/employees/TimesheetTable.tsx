@@ -59,16 +59,21 @@ export const TimesheetTable = ({
         </colgroup>
         <thead>
           <tr className="border-b border-border bg-muted/50">
-            {["Dz.", "Tyg.", "Godziny pracy", "Nom.", "Real.", "Status"].map(
-              (label) => (
-                <th
-                  key={label}
-                  className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide"
-                >
-                  {label}
-                </th>
-              ),
-            )}
+            {[
+              "Dzień miesiąca",
+              "Dzień tygodnia",
+              "Przedział pracy",
+              "Godziny nominalne",
+              "Godziny realne",
+              "Status",
+            ].map((label) => (
+              <th
+                key={label}
+                className="text-center px-3 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide"
+              >
+                {label}
+              </th>
+            ))}
           </tr>
         </thead>
       </table>
