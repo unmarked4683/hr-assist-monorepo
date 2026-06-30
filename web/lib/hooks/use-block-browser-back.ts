@@ -9,6 +9,8 @@ import { useEffect, useRef } from 'react'
 export function useBlockBrowserBackWhileOpen(open: boolean, onClose: () => void) {
   const pushedRef = useRef(false)
   const closedByPopRef = useRef(false)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   useEffect(() => {
     if (!open) return
@@ -20,16 +22,15 @@ export function useBlockBrowserBackWhileOpen(open: boolean, onClose: () => void)
     const onPopState = () => {
       closedByPopRef.current = true
       pushedRef.current = false
-      onClose()
+      onCloseRef.current()
     }
 
     window.addEventListener('popstate', onPopState)
     return () => {
       window.removeEventListener('popstate', onPopState)
-      if (pushedRef.current && !closedByPopRef.current) {
-        history.back()
-      }
+      // Zamknięcie programowe (Zapisz / X): bez history.back(), bo Next.js
+      // traktuje to jak nawigację do poprzedniej trasy (np. lista pracowników).
       pushedRef.current = false
     }
-  }, [open, onClose])
+  }, [open])
 }

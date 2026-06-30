@@ -172,31 +172,72 @@
   }
 }
 
-@keyframes pulse-red {
+/* Nieobecność nieusprawiedliwiona — spokojne pulsowanie tła (bez migotania) */
+@keyframes pulse-absence-overlay {
   0%,
   100% {
-    box-shadow: inset 0 0 0 0 oklch(0.53 0.22 25 / 0%);
+    background-color: oklch(0.53 0.22 25 / 0%);
   }
   50% {
-    box-shadow: inset 0 0 0 9999px oklch(0.53 0.22 25 / 10%);
+    background-color: oklch(0.53 0.22 25 / 24%);
   }
 }
 
-.dark .animate-pulse-red-row > td {
-  animation: pulse-red-dark 2.4s ease-in-out infinite;
-}
-@keyframes pulse-red-dark {
+@keyframes pulse-absence-overlay-dark {
   0%,
   100% {
-    box-shadow: inset 0 0 0 0 oklch(0.62 0.22 25 / 0%);
+    background-color: oklch(0.62 0.22 25 / 0%);
   }
   50% {
-    box-shadow: inset 0 0 0 9999px oklch(0.62 0.22 25 / 14%);
+    background-color: oklch(0.62 0.22 25 / 42%);
   }
 }
 
-.animate-pulse-red-row > td {
-  animation: pulse-red 2.4s ease-in-out infinite;
+tbody.hr-table-zebra > tr.animate-pulse-red-row:nth-child(odd) > td {
+  --pulse-row-base: var(--table-row-odd);
+}
+
+tbody.hr-table-zebra > tr.animate-pulse-red-row:nth-child(even) > td {
+  --pulse-row-base: var(--table-row-even);
+}
+
+tbody.hr-table-zebra > tr.animate-pulse-red-row > td {
+  position: relative;
+  background-color: var(--pulse-row-base) !important;
+}
+
+tbody.hr-table-zebra > tr.animate-pulse-red-row > td::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  animation: pulse-absence-overlay 2.8s ease-in-out infinite;
+}
+
+.dark tbody.hr-table-zebra > tr.animate-pulse-red-row > td::before {
+  animation-name: pulse-absence-overlay-dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) tbody.hr-table-zebra > tr.animate-pulse-red-row > td::before {
+    animation-name: pulse-absence-overlay-dark;
+  }
+}
+
+:root {
+  --pulse-hover-lighten: 8%;
+  --pulse-row-hover-ring: oklch(0.53 0.22 25 / 42%);
+}
+
+.dark {
+  --pulse-row-hover-ring: oklch(0.62 0.22 25 / 55%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --pulse-row-hover-ring: oklch(0.62 0.22 25 / 55%);
+  }
 }
 
 /* ── HR data table rows (zebra + hover, no layout shift) ───────────────────── */
@@ -210,11 +251,15 @@
     box-shadow 150ms ease;
 }
 
-tbody.hr-table-zebra > tr:nth-child(odd) > td {
+.hr-table-row.animate-pulse-red-row > td {
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+tbody.hr-table-zebra > tr:not(.animate-pulse-red-row):nth-child(odd) > td {
   background-color: var(--table-row-odd);
 }
 
-tbody.hr-table-zebra > tr:nth-child(even) > td {
+tbody.hr-table-zebra > tr:not(.animate-pulse-red-row):nth-child(even) > td {
   background-color: var(--table-row-even);
 }
 
@@ -222,38 +267,76 @@ tbody.hr-table-zebra > tr:nth-child(even) > td {
   cursor: pointer;
 }
 
-.hr-table-row-clickable:hover > td,
-.hr-table-row-clickable:focus-visible > td {
+.hr-table-row-clickable:not(.animate-pulse-red-row):hover > td,
+.hr-table-row-clickable:not(.animate-pulse-red-row):focus-visible > td {
   background-color: var(--table-row-hover) !important;
 }
 
+.hr-table-row-clickable.animate-pulse-red-row:hover > td,
+.hr-table-row-clickable.animate-pulse-red-row:focus-visible > td {
+  background-color: color-mix(
+    in oklch,
+    white var(--pulse-hover-lighten),
+    var(--pulse-row-base)
+  ) !important;
+}
+
 /* Jedno obramowanie na cały wiersz — nie na każdą komórkę osobno */
-.hr-table-row-clickable:hover > td:not(:first-child):not(:last-child),
-.hr-table-row-clickable:focus-visible > td:not(:first-child):not(:last-child) {
+.hr-table-row-clickable:not(.animate-pulse-red-row):hover > td:not(:first-child):not(:last-child),
+.hr-table-row-clickable:not(.animate-pulse-red-row):focus-visible > td:not(:first-child):not(:last-child) {
   box-shadow:
     inset 0 1px 0 0 var(--table-row-hover-ring),
     inset 0 -1px 0 0 var(--table-row-hover-ring);
 }
 
-.hr-table-row-clickable:hover > td:first-child:not(:only-child),
-.hr-table-row-clickable:focus-visible > td:first-child:not(:only-child) {
+.hr-table-row-clickable:not(.animate-pulse-red-row):hover > td:first-child:not(:only-child),
+.hr-table-row-clickable:not(.animate-pulse-red-row):focus-visible > td:first-child:not(:only-child) {
   box-shadow:
     inset 1px 0 0 0 var(--table-row-hover-ring),
     inset 0 1px 0 0 var(--table-row-hover-ring),
     inset 0 -1px 0 0 var(--table-row-hover-ring);
 }
 
-.hr-table-row-clickable:hover > td:last-child:not(:only-child),
-.hr-table-row-clickable:focus-visible > td:last-child:not(:only-child) {
+.hr-table-row-clickable:not(.animate-pulse-red-row):hover > td:last-child:not(:only-child),
+.hr-table-row-clickable:not(.animate-pulse-red-row):focus-visible > td:last-child:not(:only-child) {
   box-shadow:
     inset -1px 0 0 0 var(--table-row-hover-ring),
     inset 0 1px 0 0 var(--table-row-hover-ring),
     inset 0 -1px 0 0 var(--table-row-hover-ring);
 }
 
-.hr-table-row-clickable:hover > td:only-child,
-.hr-table-row-clickable:focus-visible > td:only-child {
+.hr-table-row-clickable:not(.animate-pulse-red-row):hover > td:only-child,
+.hr-table-row-clickable:not(.animate-pulse-red-row):focus-visible > td:only-child {
   box-shadow: inset 0 0 0 1px var(--table-row-hover-ring);
+}
+
+/* Wiersze wymagające uwagi — pulsowanie + czerwone obramowanie przy hover */
+.hr-table-row-clickable.animate-pulse-red-row:hover > td:not(:first-child):not(:last-child),
+.hr-table-row-clickable.animate-pulse-red-row:focus-visible > td:not(:first-child):not(:last-child) {
+  box-shadow:
+    inset 0 1px 0 0 var(--pulse-row-hover-ring),
+    inset 0 -1px 0 0 var(--pulse-row-hover-ring);
+}
+
+.hr-table-row-clickable.animate-pulse-red-row:hover > td:first-child:not(:only-child),
+.hr-table-row-clickable.animate-pulse-red-row:focus-visible > td:first-child:not(:only-child) {
+  box-shadow:
+    inset 1px 0 0 0 var(--pulse-row-hover-ring),
+    inset 0 1px 0 0 var(--pulse-row-hover-ring),
+    inset 0 -1px 0 0 var(--pulse-row-hover-ring);
+}
+
+.hr-table-row-clickable.animate-pulse-red-row:hover > td:last-child:not(:only-child),
+.hr-table-row-clickable.animate-pulse-red-row:focus-visible > td:last-child:not(:only-child) {
+  box-shadow:
+    inset -1px 0 0 0 var(--pulse-row-hover-ring),
+    inset 0 1px 0 0 var(--pulse-row-hover-ring),
+    inset 0 -1px 0 0 var(--pulse-row-hover-ring);
+}
+
+.hr-table-row-clickable.animate-pulse-red-row:hover > td:only-child,
+.hr-table-row-clickable.animate-pulse-red-row:focus-visible > td:only-child {
+  box-shadow: inset 0 0 0 1px var(--pulse-row-hover-ring);
 }
 
 .hr-table-row:last-child {
