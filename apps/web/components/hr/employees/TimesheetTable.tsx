@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import {
   getDaysInMonth,
   getDayOfWeek,
@@ -22,6 +22,9 @@ interface TimesheetTableProps {
   employee: Employee;
   month: number;
   year: number;
+  scrollToDate?: IsoDate | null;
+  scrollRequestKey?: number;
+  onScrollToDateComplete?: () => void;
   onDayClick: (date: IsoDate) => void;
 }
 
@@ -38,14 +41,33 @@ function TimesheetColumnGroup() {
   );
 }
 
+const scrollRowToCenter = (container: HTMLElement, row: HTMLElement): void => {
+  const rowRect = row.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  const targetTop =
+    container.scrollTop +
+    (rowRect.top - containerRect.top) -
+    container.clientHeight / 2 +
+    rowRect.height / 2;
+
+  container.scrollTo({
+    top: Math.max(0, targetTop),
+    behavior: "auto",
+  });
+};
+
 export const TimesheetTable = ({
   employee,
   month,
   year,
+  scrollToDate = null,
+  scrollRequestKey = 0,
+  onScrollToDateComplete,
   onDayClick,
 }: TimesheetTableProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const todayRowRef = useRef<HTMLTableRowElement>(null);
+  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
+  const suppressDefaultScrollRef = useRef(false);
   const daysCount = getDaysInMonth(year, month);
   const todayStr = getTodayIsoDate();
   const nomHours = `${calcShiftHours(employee.startHour, employee.endHour)}h`;
@@ -64,16 +86,72 @@ export const TimesheetTable = ({
 
   const hasTodayInView = days.some(({ isToday }) => isToday);
 
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (hasTodayInView) {
-        todayRowRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
+  const scrollRowIntoView = (date: IsoDate): boolean => {
+    const container = scrollRef.current;
+    const row = rowRefs.current.get(date);
+    if (!container || !row) return false;
+
+    scrollRowToCenter(container, row);
+    return true;
+  };
+
+  useLayoutEffect(() => {
+    if (!scrollToDate || scrollRequestKey === 0) return;
+
+    let cancelled = false;
+    let attempts = 0;
+    let timeoutId = 0;
+
+    const finish = () => {
+      if (cancelled) return;
+      suppressDefaultScrollRef.current = true;
+      onScrollToDateComplete?.();
+    };
+
+    const tryScroll = () => {
+      if (cancelled) return;
+
+      if (scrollRowIntoView(scrollToDate)) {
+        finish();
+        return;
+      }
+
+      attempts += 1;
+      if (attempts < 30) {
+        timeoutId = window.setTimeout(tryScroll, 16);
       } else {
-        scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+        finish();
+      }
+    };
+
+    tryScroll();
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [month, onScrollToDateComplete, scrollRequestKey, scrollToDate, year]);
+
+  useEffect(() => {
+    if (scrollRequestKey !== 0) return;
+
+    if (suppressDefaultScrollRef.current) {
+      suppressDefaultScrollRef.current = false;
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      const container = scrollRef.current;
+      const todayRow = rowRefs.current.get(todayStr);
+      if (hasTodayInView && container && todayRow) {
+        scrollRowToCenter(container, todayRow);
+      } else {
+        container?.scrollTo({ top: 0, behavior: "auto" });
       }
     });
+
     return () => cancelAnimationFrame(frame);
-  }, [month, year, hasTodayInView]);
+  }, [hasTodayInView, month, scrollRequestKey, todayStr, year]);
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
@@ -115,7 +193,10 @@ export const TimesheetTable = ({
                 return (
                   <tr
                     key={dateStr}
-                    ref={isToday ? todayRowRef : undefined}
+                    ref={(element) => {
+                      if (element) rowRefs.current.set(dateStr, element);
+                      else rowRefs.current.delete(dateStr);
+                    }}
                     onClick={() => !weekend && onDayClick(dateStr)}
                     className={[
                       "hr-table-row",

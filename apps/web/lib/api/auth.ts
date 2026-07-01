@@ -1,34 +1,21 @@
-const AUTH_TOKEN_KEY = 'hr-auth-token'
+import type { LoginInput, LoginResult } from '@/lib/api/mock/auth'
+import { mockLogin, mockLogout } from '@/lib/api/mock/auth'
+import { mockApiDelay } from '@/lib/api/mock/delay'
 
-export interface LoginInput {
-  email: string
-  password: string
-}
+export type { LoginInput, LoginResult } from '@/lib/api/mock/auth'
+export { hasAuthSession } from '@/lib/api/mock/auth'
 
-export interface LoginResult {
-  success: boolean
-}
-
-const persistAuthSession = (): void => {
-  localStorage.setItem(AUTH_TOKEN_KEY, 'mock-session')
-  sessionStorage.setItem(AUTH_TOKEN_KEY, 'mock-session')
-}
-
-export const clearAuthSession = (): void => {
-  localStorage.removeItem(AUTH_TOKEN_KEY)
-  sessionStorage.removeItem(AUTH_TOKEN_KEY)
-  document.cookie = `${AUTH_TOKEN_KEY}=; Max-Age=0; path=/; SameSite=Lax`
-}
-
-export const hasAuthSession = (): boolean =>
-  Boolean(localStorage.getItem(AUTH_TOKEN_KEY) ?? sessionStorage.getItem(AUTH_TOKEN_KEY))
-
-export const login = async ({ email, password }: LoginInput): Promise<LoginResult> => {
-  const success = Boolean(email) && password.length >= 4
-  if (success) persistAuthSession()
-  return { success }
+export const login = async (input: LoginInput): Promise<LoginResult> => {
+  await mockApiDelay()
+  // const response = await apiPost<ResponseWrapper<{ accessToken: string }>>('/auth/login', input)
+  // const { accessToken } = unwrapResponse(response)
+  // persistAuthSession(accessToken)
+  // return { success: true }
+  return mockLogin(input)
 }
 
 export const logout = async (): Promise<void> => {
-  clearAuthSession()
+  await mockApiDelay()
+  // await apiPost('/auth/logout', {})
+  return mockLogout()
 }

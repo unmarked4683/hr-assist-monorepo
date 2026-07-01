@@ -1,9 +1,5 @@
-import {
-  PRESENT_STATUS,
-  UNEXCUSED_ABSENCE_STATUS,
-  type ListAttendanceStatus,
-  type RowStatus,
-} from '../types/attendance'
+import { DayStatus } from '../types/day-status'
+import type { ListAttendanceStatus, RowStatus } from '../types/attendance'
 import type { Employee } from '../types/employee'
 import { calcShiftHours } from './shift'
 
@@ -15,8 +11,8 @@ export const getRowStatus = (
   const record = employee.dayRecords.find(({ date }) => date === dateStr)
 
   if (record?.status) {
-    if (record.status === PRESENT_STATUS) return { type: 'ok' }
-    if (record.status === UNEXCUSED_ABSENCE_STATUS) return { type: 'absent' }
+    if (record.status === DayStatus.PRESENT) return { type: 'ok' }
+    if (record.status === DayStatus.UNEXCUSED_ABSENCE) return { type: 'absent' }
     return { type: 'leave', label: record.status }
   }
 
@@ -30,18 +26,18 @@ export const hasDayRecord = (dateStr: string, employee: Employee): boolean =>
 
 export const getRealHours = (dateStr: string, employee: Employee): string => {
   const record = employee.dayRecords.find(({ date }) => date === dateStr)
-  if (!record?.status || record.status === PRESENT_STATUS) {
+  if (!record?.status || record.status === DayStatus.PRESENT) {
     return `${calcShiftHours(employee.startHour, employee.endHour)}h`
   }
   return '0h'
 }
 
 export const employeeNeedsAction = (employee: Employee): boolean =>
-  employee.dayRecords.some(({ status }) => status === UNEXCUSED_ABSENCE_STATUS)
+  employee.dayRecords.some(({ status }) => status === DayStatus.UNEXCUSED_ABSENCE)
 
 export const isDayAbsent = (dateStr: string, employee: Employee): boolean => {
   const record = employee.dayRecords.find(({ date }) => date === dateStr)
-  return record?.status === UNEXCUSED_ABSENCE_STATUS
+  return record?.status === DayStatus.UNEXCUSED_ABSENCE
 }
 
 export const toListAttendanceStatus = (needsAction: boolean): ListAttendanceStatus =>

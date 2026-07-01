@@ -29,6 +29,15 @@ export const toIsoDate = (year: number, month: number, day: number): IsoDate => 
   return `${year}-${monthPart}-${dayPart}` as IsoDate
 }
 
+export const parseIsoDate = (date: IsoDate): { year: number; month: number; day: number } => {
+  const [yearStr, monthStr, dayStr] = date.split('-')
+  return {
+    year: parseInt(yearStr, 10),
+    month: parseInt(monthStr, 10),
+    day: parseInt(dayStr, 10),
+  }
+}
+
 export const getInitialTimesheetPeriod = (): { month: number; year: number } => {
   const now = new Date()
   const year = now.getFullYear()

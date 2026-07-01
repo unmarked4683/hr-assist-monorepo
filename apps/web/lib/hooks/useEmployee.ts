@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { fetchEmployeeById } from '@/lib/api/employees'
+import { fetchEmployeeById } from '@/lib/api'
 import { useApp } from '@/components/hr/AppContext'
 import type { Employee } from '@hr-assist/shared'
 

@@ -1,6 +1,6 @@
 'use client'
 
-import type { RowStatus, ListAttendanceStatus } from '@hr-assist/shared'
+import { DayStatus, getDayStatusLabel, type RowStatus, type ListAttendanceStatus } from '@hr-assist/shared'
 
 type ListStatus = ListAttendanceStatus
 
@@ -51,7 +51,7 @@ export function AttendanceStatusBadge(props: Props) {
           NN
         </span>
         <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md border border-border bg-popover px-2.5 py-1 text-xs text-popover-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-50">
-          Nieobecność nieusprawiedliwiona
+          {DayStatus.UNEXCUSED_ABSENCE}
         </span>
       </span>
     )
@@ -64,7 +64,7 @@ export function AttendanceStatusBadge(props: Props) {
         USP
       </span>
       <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md border border-border bg-popover px-2.5 py-1 text-xs text-popover-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-50">
-        {status.label}
+        {getDayStatusLabel(status.label)}
       </span>
     </span>
   )

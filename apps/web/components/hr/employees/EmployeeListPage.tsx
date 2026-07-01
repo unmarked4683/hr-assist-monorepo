@@ -4,18 +4,18 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Plus, MapPin } from 'lucide-react'
 import { useApp } from '../AppContext'
-import { employeeNeedsAction, toListAttendanceStatus } from '@hr-assist/shared'
+import { employeeNeedsAction, getLocationLabel, toListAttendanceStatus, type Location } from '@hr-assist/shared'
 import { AppLayout } from '../layout/AppLayout'
 import { AttendanceStatusBadge } from '../shared/AttendanceStatusBadge'
 import { EmployeeListSkeleton } from './EmployeeListSkeleton'
 
 const COLUMNS = ['Imię', 'Nazwisko', 'Stanowisko', 'Lokalizacja', 'Status'] as const
 
-function LocationBadge({ location }: { location: string }) {
+function LocationBadge({ location }: { location: Location }) {
   return (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
       <MapPin size={10} />
-      {location}
+      {getLocationLabel(location)}
     </span>
   )
 }

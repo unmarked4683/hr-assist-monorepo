@@ -5,13 +5,13 @@ import { useApp } from '../AppContext'
 import { Modal, ModalHeader, ModalFooter } from '../shared/Modal'
 import {
   DAY_STATUS_OPTIONS,
-  PRESENT_STATUS,
+  DayStatus,
   REMOVE_FUTURE_ATTENDANCE,
   REMOVE_FUTURE_ATTENDANCE_LABEL,
   formatPolishDate,
   getTodayIsoDate,
   calcShiftHours,
-  type DayStatus,
+  getDayStatusLabel,
   type Employee,
   type IsoDate,
 } from '@hr-assist/shared'
@@ -19,9 +19,9 @@ import {
 type DayStatusFormValue = DayStatus | typeof REMOVE_FUTURE_ATTENDANCE
 
 const resolveStatus = (employee: Employee, date: IsoDate | null): DayStatusFormValue => {
-  if (!date) return PRESENT_STATUS
+  if (!date) return DayStatus.PRESENT
   const record = employee.dayRecords.find(({ date: recordDate }) => recordDate === date)
-  return record?.status ?? PRESENT_STATUS
+  return record?.status ?? DayStatus.PRESENT
 }
 
 export const DayStatusModal = ({ employee }: { employee: Employee }) => {
@@ -49,7 +49,7 @@ export const DayStatusModal = ({ employee }: { employee: Employee }) => {
   )
 
   const isRemoving = status === REMOVE_FUTURE_ATTENDANCE
-  const isPresent = !isRemoving && status === PRESENT_STATUS
+  const isPresent = !isRemoving && status === DayStatus.PRESENT
   const hoursDisplay = isRemoving
     ? 'Frekwencja nieustawiona — dzień wróci do stanu domyślnego (—).'
     : isPresent
@@ -86,7 +86,7 @@ export const DayStatusModal = ({ employee }: { employee: Employee }) => {
             ) : null}
             {DAY_STATUS_OPTIONS.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {getDayStatusLabel(option)}
               </option>
             ))}
           </select>

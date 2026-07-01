@@ -1,14 +1,15 @@
 'use client'
 
 import {
-  useState,
+  useCallback,
   useEffect,
   useLayoutEffect,
-  useCallback,
+  useState,
   type ReactNode,
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 
 const VIEWPORT_EDGE_MARGIN = 10
 const FLYOUT_GAP = 8
@@ -47,6 +48,8 @@ interface AnchoredFlyoutProps {
   flyoutRef: RefObject<HTMLDivElement | null>
   title: string
   placement?: 'right' | 'left'
+  showCloseButton?: boolean
+  panelClassName?: string
   children: ReactNode
 }
 
@@ -57,6 +60,8 @@ export function AnchoredFlyout({
   flyoutRef,
   title,
   placement = 'right',
+  showCloseButton = false,
+  panelClassName = 'w-52',
   children,
 }: AnchoredFlyoutProps) {
   const [layout, setLayout] = useState<FlyoutLayout | null>(null)
@@ -103,8 +108,16 @@ export function AnchoredFlyout({
       onClose()
     }
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
     document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [flyoutRef, onClose, open, triggerRef])
 
   if (!open) return null
@@ -150,11 +163,23 @@ export function AnchoredFlyout({
 
       <div
         ref={flyoutRef}
-        className="w-52 bg-popover border border-border rounded-xl shadow-lg p-3"
+        className={`bg-popover border border-border rounded-xl shadow-lg p-3 ${panelClassName}`}
       >
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
-          {title}
-        </p>
+        <div className="flex items-start justify-between gap-2 mb-2 px-1">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {title}
+          </p>
+          {showCloseButton ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-6 h-6 -mt-0.5 -mr-0.5 flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0"
+              aria-label="Zamknij"
+            >
+              <X size={14} />
+            </button>
+          ) : null}
+        </div>
         {children}
       </div>
     </div>,

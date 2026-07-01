@@ -2,7 +2,13 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { DIMENSION_LABEL, WORK_DIMENSIONS, formatHour, type WorkDimension } from '@hr-assist/shared'
+import {
+  WORK_DIMENSIONS,
+  formatHour,
+  getWorkDimensionLabel,
+  isFullWorkDimension,
+  type WorkDimension,
+} from '@hr-assist/shared'
 import { useClickOutside } from '@/lib/hooks/useClickOutside'
 
 const DROPDOWN_PANEL =
@@ -221,7 +227,7 @@ export const DimensionSelect = ({ value, onChange }: DimensionSelectProps) => {
           onClick={() => setOpen((current) => !current)}
           className="h-9 w-full px-3 pr-8 rounded-lg border border-input bg-background text-sm text-foreground text-left focus:outline-none focus:ring-2 focus:ring-primary/30 hover:border-primary/40 transition relative"
         >
-          {value === '1' ? '1 (pełny etat)' : value}
+          {isFullWorkDimension(value) ? '1 (pełny etat)' : value}
           <ChevronDown
             size={14}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
@@ -243,14 +249,14 @@ export const DimensionSelect = ({ value, onChange }: DimensionSelectProps) => {
                     : 'text-foreground'
                 }`}
               >
-                <span>{dimension === '1' ? '1 (pełny etat)' : dimension}</span>
-                <span className="text-xs text-muted-foreground">{DIMENSION_LABEL[dimension]}</span>
+                <span>{isFullWorkDimension(dimension) ? '1 (pełny etat)' : dimension}</span>
+                <span className="text-xs text-muted-foreground">{getWorkDimensionLabel(dimension)}</span>
               </button>
             ))}
           </div>
         )}
       </div>
-      <span className="text-xs text-primary font-medium leading-none">{DIMENSION_LABEL[value]}</span>
+      <span className="text-xs text-primary font-medium leading-none">{getWorkDimensionLabel(value)}</span>
     </div>
   )
 }

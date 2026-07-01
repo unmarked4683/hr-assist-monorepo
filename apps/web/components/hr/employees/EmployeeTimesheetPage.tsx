@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getInitialTimesheetPeriod, type Employee } from '@hr-assist/shared'
+import { getInitialTimesheetPeriod, parseIsoDate, type Employee, type IsoDate } from '@hr-assist/shared'
 import { useApp } from '../AppContext'
 import { AppLayout } from '../layout/AppLayout'
 import { EmployeeProfileCard } from './EmployeeProfileCard'
@@ -17,9 +17,26 @@ export const EmployeeTimesheetPage = ({ employee }: EmployeeTimesheetPageProps) 
   const router = useRouter()
   const { openDayStatusModal } = useApp()
   const [period, setPeriod] = useState(getInitialTimesheetPeriod)
+  const [scrollRequest, setScrollRequest] = useState<{ date: IsoDate; key: number } | null>(
+    null,
+  )
+
+  const absenceRefreshToken = useMemo(
+    () =>
+      employee.dayRecords
+        .map((record) => `${record.date}:${record.status ?? ''}`)
+        .join('|'),
+    [employee.dayRecords],
+  )
 
   const handlePeriodChange = (month: number, year: number) => {
     setPeriod({ month, year })
+  }
+
+  const handleUnexcusedAbsenceSelect = (date: IsoDate) => {
+    const { month, year } = parseIsoDate(date)
+    setPeriod({ month, year })
+    setScrollRequest({ date, key: Date.now() })
   }
 
   return (
@@ -40,11 +57,16 @@ export const EmployeeTimesheetPage = ({ employee }: EmployeeTimesheetPageProps) 
           month={period.month}
           year={period.year}
           onPeriodChange={handlePeriodChange}
+          onUnexcusedAbsenceSelect={handleUnexcusedAbsenceSelect}
+          absenceRefreshToken={absenceRefreshToken}
         />
         <TimesheetTable
           employee={employee}
           month={period.month}
           year={period.year}
+          scrollToDate={scrollRequest?.date ?? null}
+          scrollRequestKey={scrollRequest?.key ?? 0}
+          onScrollToDateComplete={() => setScrollRequest(null)}
           onDayClick={openDayStatusModal}
         />
       </div>

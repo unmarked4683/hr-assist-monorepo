@@ -4,20 +4,23 @@ import { useState, useEffect } from 'react'
 import { Building2, Settings2 } from 'lucide-react'
 import { useApp } from '../AppContext'
 import { Modal, ModalHeader, ModalFooter } from '../shared/Modal'
+import { fetchPositionSuggestions } from '@/lib/api'
+import { LOCAL_POSITION_SUGGESTION_SEED } from '@/lib/constants/form-seeds'
+import { mergePositionSuggestions } from '@/lib/utils/position-suggestions'
 import {
-  COMPANY_OPTIONS,
-  DIMENSION_HOURS,
-  EMPLOYMENT_CONTRACT,
+  ContractType,
   CONTRACT_TYPE_OPTIONS,
-  LOCATIONS,
-  POSITION_SUGGESTIONS,
+  getContractTypeLabel,
+  Location,
+  LOCATION_OPTIONS,
+  getLocationLabel,
+  WORK_DIMENSION,
+  getWorkDimensionMinutes,
   parsePeselBirthdate,
   isOvernight,
-  shiftHour,
-  type Company,
+  shiftTimeByMinutes,
   type Employee,
   type EmployeeInput,
-  type Location,
   type WorkDimension,
 } from '@hr-assist/shared'
 import { FormSelect, HourPicker, AutocompleteInput, DimensionSelect } from './employee-form-controls'
@@ -25,38 +28,60 @@ import { EmployeeUpdateConfirmModal } from './EmployeeUpdateConfirmModal'
 
 type EmployeeFormState = EmployeeInput
 
-const buildInitial = (employee?: Employee | null): EmployeeFormState => ({
+const buildInitial = (
+  employee: Employee | null | undefined,
+  defaultCompanyId: string,
+): EmployeeFormState => ({
   firstName: employee?.firstName ?? '',
   lastName: employee?.lastName ?? '',
   pesel: employee?.pesel ?? '',
-  contractType: EMPLOYMENT_CONTRACT,
-  workDimension: employee?.workDimension ?? '1',
+  contractType: employee?.contractType ?? ContractType.EMPLOYMENT,
+  workDimension: employee?.workDimension ?? WORK_DIMENSION.FULL.fraction,
   startHour: employee?.startHour ?? '08:00',
   endHour: employee?.endHour ?? '16:00',
-  location: employee?.location ?? 'Biuro',
+  location: employee?.location ?? Location.OFFICE,
   position: employee?.position ?? '',
-  company: employee?.company ?? 'Spółka Produkcja',
+  companyId: employee?.companyId ?? defaultCompanyId,
 })
 
 export const EmployeeFormModal = () => {
-  const { isEmployeeFormOpen, editingEmployee, closeEmployeeForm, saveEmployee } = useApp()
+  const { isEmployeeFormOpen, editingEmployee, closeEmployeeForm, saveEmployee, companies } =
+    useApp()
   const isEdit = Boolean(editingEmployee)
+  const defaultCompanyId = companies[0]?.id ?? ''
 
-  const [form, setForm] = useState<EmployeeFormState>(() => buildInitial(editingEmployee))
+  const [form, setForm] = useState<EmployeeFormState>(() =>
+    buildInitial(editingEmployee, defaultCompanyId),
+  )
   const [initialSnapshot, setInitialSnapshot] = useState<EmployeeFormState>(() =>
-    buildInitial(editingEmployee),
+    buildInitial(editingEmployee, defaultCompanyId),
   )
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [positionSuggestions, setPositionSuggestions] = useState<string[]>([])
 
   useEffect(() => {
     if (!isEmployeeFormOpen) {
       setIsConfirmOpen(false)
       return
     }
-    const initial = buildInitial(editingEmployee)
+    const initial = buildInitial(editingEmployee, defaultCompanyId)
     setForm(initial)
     setInitialSnapshot(initial)
-  }, [isEmployeeFormOpen, editingEmployee])
+  }, [defaultCompanyId, isEmployeeFormOpen, editingEmployee])
+
+  useEffect(() => {
+    if (!isEmployeeFormOpen) return
+
+    const seed = mergePositionSuggestions(
+      LOCAL_POSITION_SUGGESTION_SEED,
+      editingEmployee?.position ? [editingEmployee.position] : [],
+    )
+    setPositionSuggestions(seed)
+
+    void fetchPositionSuggestions().then((fresh) => {
+      setPositionSuggestions((current) => mergePositionSuggestions(current, fresh))
+    })
+  }, [isEmployeeFormOpen, editingEmployee?.position])
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(initialSnapshot)
 
@@ -65,21 +90,29 @@ export const EmployeeFormModal = () => {
   }
 
   const handleStartChange = (hour: string) => {
-    const hours = DIMENSION_HOURS[form.workDimension] ?? 8
-    setForm((current) => ({ ...current, startHour: hour, endHour: shiftHour(hour, hours) }))
+    const minutes = getWorkDimensionMinutes(form.workDimension)
+    setForm((current) => ({
+      ...current,
+      startHour: hour,
+      endHour: shiftTimeByMinutes(hour, minutes),
+    }))
   }
 
   const handleEndChange = (hour: string) => {
-    const hours = DIMENSION_HOURS[form.workDimension] ?? 8
-    setForm((current) => ({ ...current, endHour: hour, startHour: shiftHour(hour, -hours) }))
+    const minutes = getWorkDimensionMinutes(form.workDimension)
+    setForm((current) => ({
+      ...current,
+      endHour: hour,
+      startHour: shiftTimeByMinutes(hour, -minutes),
+    }))
   }
 
   const handleDimensionChange = (dimension: WorkDimension) => {
-    const hours = DIMENSION_HOURS[dimension] ?? 8
+    const minutes = getWorkDimensionMinutes(dimension)
     setForm((current) => ({
       ...current,
       workDimension: dimension,
-      endHour: shiftHour(current.startHour, hours),
+      endHour: shiftTimeByMinutes(current.startHour, minutes),
     }))
   }
 
@@ -93,11 +126,11 @@ export const EmployeeFormModal = () => {
       setIsConfirmOpen(true)
       return
     }
-    void saveEmployee({ ...form, contractType: EMPLOYMENT_CONTRACT }, editingEmployee?.id)
+    void saveEmployee({ ...form, contractType: ContractType.EMPLOYMENT }, editingEmployee?.id)
   }
 
   const handleConfirmSave = () => {
-    const payload = { ...form, contractType: EMPLOYMENT_CONTRACT }
+    const payload = { ...form, contractType: ContractType.EMPLOYMENT }
     const employeeId = editingEmployee?.id
     setIsConfirmOpen(false)
     closeEmployeeForm()
@@ -162,7 +195,10 @@ export const EmployeeFormModal = () => {
             <FormSelect
               label="Typ umowy"
               value={form.contractType}
-              options={CONTRACT_TYPE_OPTIONS}
+              options={CONTRACT_TYPE_OPTIONS.map((option) => ({
+                value: option,
+                label: getContractTypeLabel(option),
+              }))}
               onChange={(value) => setField('contractType', value)}
               locked
             />
@@ -180,11 +216,11 @@ export const EmployeeFormModal = () => {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-muted-foreground">Lokalizacja</label>
               <div className="flex h-9 rounded-lg border border-input bg-muted/30 p-0.5">
-                {LOCATIONS.map((location) => (
+                {LOCATION_OPTIONS.map((location) => (
                   <button
                     key={location}
                     type="button"
-                    onClick={() => setField('location', location as Location)}
+                    onClick={() => setField('location', location)}
                     className={`flex-1 flex items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-all select-none ${
                       form.location === location
                         ? 'bg-card shadow-sm text-foreground'
@@ -192,8 +228,8 @@ export const EmployeeFormModal = () => {
                     }`}
                     aria-pressed={form.location === location}
                   >
-                    {location === 'Biuro' ? <Building2 size={13} /> : <Settings2 size={13} />}
-                    {location}
+                    {location === Location.OFFICE ? <Building2 size={13} /> : <Settings2 size={13} />}
+                    {getLocationLabel(location)}
                   </button>
                 ))}
               </div>
@@ -203,15 +239,18 @@ export const EmployeeFormModal = () => {
               label="Stanowisko"
               value={form.position}
               onChange={(value) => setField('position', value)}
-              suggestions={POSITION_SUGGESTIONS}
+              suggestions={positionSuggestions}
               placeholder="np. Brygadzista"
             />
 
-            <FormSelect<Company>
+            <FormSelect
               label="Firma / Byt prawny"
-              value={form.company}
-              options={COMPANY_OPTIONS}
-              onChange={(value) => setField('company', value)}
+              value={form.companyId}
+              options={companies.map((company) => ({
+                value: company.id,
+                label: company.name,
+              }))}
+              onChange={(value) => setField('companyId', value)}
             />
           </div>
         </div>

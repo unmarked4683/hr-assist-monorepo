@@ -3,16 +3,25 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, FileText, Trash2 } from "lucide-react";
-import type { Employee } from '@hr-assist/shared'
+import {
+  type Employee,
+  Location,
+  getLocationLabel,
+  isFullWorkDimension,
+} from '@hr-assist/shared'
 import { useApp } from "../AppContext";
 import { MonthYearPicker } from "../shared/MonthYearPicker";
 import { EmployeeDeleteConfirmModal } from "./EmployeeDeleteConfirmModal";
+import { UnexcusedAbsenceBell } from "./UnexcusedAbsenceBell";
+import type { IsoDate } from "@hr-assist/shared";
 
 interface EmployeeProfileCardProps {
   employee: Employee;
   month: number;
   year: number;
   onPeriodChange: (month: number, year: number) => void;
+  onUnexcusedAbsenceSelect: (date: IsoDate) => void;
+  absenceRefreshToken: string;
 }
 
 export function EmployeeProfileCard({
@@ -20,9 +29,11 @@ export function EmployeeProfileCard({
   month,
   year,
   onPeriodChange,
+  onUnexcusedAbsenceSelect,
+  absenceRefreshToken,
 }: EmployeeProfileCardProps) {
   const router = useRouter();
-  const { openEditEmployeeForm, openReportModal, deleteEmployee } = useApp();
+  const { openEditEmployeeForm, openReportModal, deleteEmployee, getCompanyName } = useApp();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const employeeName = `${employee.firstName} ${employee.lastName}`;
@@ -62,19 +73,19 @@ export function EmployeeProfileCard({
               <p className="text-xs text-muted-foreground mb-0.5">Lokalizacja</p>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                  employee.location === "Biuro"
+                  employee.location === Location.OFFICE
                     ? "bg-primary/10 text-primary border-primary/25"
                     : "bg-[oklch(0.72_0.17_70)]/10 text-[oklch(0.58_0.16_70)] dark:text-[oklch(0.78_0.17_70)] border-[oklch(0.72_0.17_70)]/25"
                 }`}
               >
-                {employee.location}
+                {getLocationLabel(employee.location)}
               </span>
             </div>
 
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Wymiar pracy</p>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
-                {employee.workDimension === "1"
+                {isFullWorkDimension(employee.workDimension)
                   ? "Pełny etat"
                   : employee.workDimension + " etatu"}
               </span>
@@ -92,7 +103,7 @@ export function EmployeeProfileCard({
               <p className="text-xs text-muted-foreground mb-0.5">
                 Firma / Byt prawny
               </p>
-              <p className="text-sm text-foreground">{employee.company}</p>
+              <p className="text-sm text-foreground">{getCompanyName(employee.companyId)}</p>
             </div>
             <div />
           </div>
@@ -125,12 +136,17 @@ export function EmployeeProfileCard({
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="mt-4 pt-4 border-t border-border flex items-center justify-between gap-3">
           <MonthYearPicker
             month={month}
             year={year}
             onChange={onPeriodChange}
             compact
+          />
+          <UnexcusedAbsenceBell
+            employeeId={employee.id}
+            refreshToken={absenceRefreshToken}
+            onSelectAbsence={onUnexcusedAbsenceSelect}
           />
         </div>
       </div>

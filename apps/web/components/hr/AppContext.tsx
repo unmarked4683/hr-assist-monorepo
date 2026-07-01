@@ -10,16 +10,19 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { login as loginRequest, logout as logoutRequest, hasAuthSession } from '@/lib/api/auth'
 import {
   createEmployee,
   deleteDayRecord as deleteDayRecordRequest,
   deleteEmployee as deleteEmployeeRequest,
+  fetchCompanies,
   fetchEmployees,
+  hasAuthSession,
+  login as loginRequest,
+  logout as logoutRequest,
   updateEmployee,
   upsertDayRecord,
-} from '@/lib/api/employees'
-import type { DayStatus, Employee, EmployeeInput, IsoDate } from '@hr-assist/shared'
+} from '@/lib/api'
+import type { Company, DayStatus, Employee, EmployeeInput, IsoDate } from '@hr-assist/shared'
 import type { Theme } from '@/lib/types/theme'
 import { Toast, type ToastState } from '@/components/hr/shared/Toast'
 
@@ -34,6 +37,8 @@ interface AppContextValue {
 
   employees: Employee[]
   isEmployeesReady: boolean
+  companies: Company[]
+  getCompanyName: (companyId: string) => string
   refreshEmployees: () => Promise<void>
   getEmployee: (id: string) => Employee | null
 
@@ -67,6 +72,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [loginError, setLoginError] = useState(false)
   const [theme, setThemeState] = useState<Theme>('system')
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [companies, setCompanies] = useState<Company[]>([])
   const [isEmployeesReady, setIsEmployeesReady] = useState(false)
   const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
@@ -90,16 +96,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const refreshEmployees = useCallback(async () => {
     setIsEmployeesReady(false)
     try {
-      const data = await fetchEmployees()
+      const [employeeData, companyData] = await Promise.all([fetchEmployees(), fetchCompanies()])
       if (!isLoggedInRef.current) return
-      setEmployees(data)
+      setEmployees(employeeData)
+      setCompanies(companyData)
     } catch {
       if (!isLoggedInRef.current) return
       setEmployees([])
+      setCompanies([])
     } finally {
       if (isLoggedInRef.current) setIsEmployeesReady(true)
     }
   }, [])
+
+  const getCompanyName = useCallback(
+    (companyId: string): string =>
+      companies.find((company) => company.id === companyId)?.name ?? '—',
+    [companies],
+  )
 
   useEffect(() => {
     if (!isLoggedIn) return
@@ -227,6 +241,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     await logoutRequest()
     setIsLoggedIn(false)
     setEmployees([])
+    setCompanies([])
     setIsEmployeesReady(false)
     setIsEmployeeFormOpen(false)
     setEditingEmployee(null)
@@ -247,6 +262,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setTheme,
       employees,
       isEmployeesReady,
+      companies,
+      getCompanyName,
       refreshEmployees,
       getEmployee,
       isEmployeeFormOpen,
@@ -276,6 +293,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       editingDate,
       editingEmployee,
       employees,
+      getCompanyName,
+      companies,
       getEmployee,
       isDayStatusModalOpen,
       isEmployeeFormOpen,
