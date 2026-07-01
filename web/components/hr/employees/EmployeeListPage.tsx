@@ -7,6 +7,7 @@ import { useApp } from '../AppContext'
 import { employeeNeedsAction, toListAttendanceStatus } from '@/lib/domain/attendance'
 import { AppLayout } from '../layout/AppLayout'
 import { AttendanceStatusBadge } from '../shared/AttendanceStatusBadge'
+import { EmployeeListSkeleton } from './EmployeeListSkeleton'
 
 const COLUMNS = ['Imię', 'Nazwisko', 'Stanowisko', 'Lokalizacja', 'Status'] as const
 
@@ -50,6 +51,10 @@ export function EmployeeListPage() {
       emp.location.toLowerCase().includes(q)
     )
   })
+
+  if (!isEmployeesReady) {
+    return <EmployeeListSkeleton />
+  }
 
   return (
     <AppLayout>
@@ -98,22 +103,14 @@ export function EmployeeListPage() {
             <table className="w-full text-sm table-fixed">
               <ColumnGroup />
               <tbody className="hr-table-zebra">
-                {!isEmployeesReady && (
-                  <tr>
-                    <td colSpan={5} className="text-center py-12 text-muted-foreground text-sm">
-                      Ładowanie pracowników...
-                    </td>
-                  </tr>
-                )}
-                {isEmployeesReady && filteredEmployees.length === 0 && (
+                {filteredEmployees.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-12 text-muted-foreground text-sm">
                       Brak pracowników spełniających kryteria wyszukiwania.
                     </td>
                   </tr>
                 )}
-                {isEmployeesReady &&
-                  filteredEmployees.map((emp) => {
+                {filteredEmployees.map((emp) => {
                   const needsAction = employeeNeedsAction(emp)
                   return (
                     <tr

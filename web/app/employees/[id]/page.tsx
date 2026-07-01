@@ -3,6 +3,7 @@
 import { use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { EmployeeTimesheetPage } from '@/components/hr/employees/EmployeeTimesheetPage'
+import { EmployeeTimesheetSkeleton } from '@/components/hr/employees/EmployeeTimesheetSkeleton'
 import { DayStatusModal } from '@/components/hr/attendance/DayStatusModal'
 import { ReportGenerateModal } from '@/components/hr/reports/ReportGenerateModal'
 import { useApp } from '@/components/hr/AppContext'
@@ -28,7 +29,9 @@ export default function EmployeeDetailPage({
     if (!isLoading && !employee) router.replace('/employees')
   }, [employee, isLoading, router])
 
-  if (isLoading || !employee) return null
+  if (isLoading) return <EmployeeTimesheetSkeleton />
+
+  if (!employee) return null
 
   return (
     <>

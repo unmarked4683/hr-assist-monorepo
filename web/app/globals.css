@@ -415,3 +415,79 @@ tbody.hr-table-zebra > tr:not(.animate-pulse-red-row):nth-child(even) > td {
 .overflow-y-scroll {
   overflow-y: scroll !important;
 }
+
+/* ── Skeleton shimmer loading ─────────────────────────────────────────────── */
+@keyframes hr-shimmer-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.hr-skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: calc(var(--radius) * 0.6);
+  background-color: color-mix(in oklch, var(--muted) 85%, var(--foreground));
+}
+
+.hr-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 35%,
+    color-mix(in oklch, var(--background) 55%, transparent) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  animation: hr-shimmer-sweep 1.6s ease-in-out infinite;
+}
+
+.dark .hr-skeleton::after,
+:root:not(.light) .hr-skeleton::after {
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 35%,
+    oklch(1 0 0 / 12%) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hr-skeleton::after {
+    animation: none;
+    opacity: 0.4;
+  }
+}
+
+.hr-skeleton-table tbody tr:nth-child(1) .hr-skeleton::after {
+  animation-delay: 0ms;
+}
+
+.hr-skeleton-table tbody tr:nth-child(2) .hr-skeleton::after {
+  animation-delay: 80ms;
+}
+
+.hr-skeleton-table tbody tr:nth-child(3) .hr-skeleton::after {
+  animation-delay: 160ms;
+}
+
+.hr-skeleton-table tbody tr:nth-child(4) .hr-skeleton::after {
+  animation-delay: 240ms;
+}
+
+.hr-skeleton-table tbody tr:nth-child(5) .hr-skeleton::after {
+  animation-delay: 320ms;
+}
+
+.hr-skeleton-table tbody tr:nth-child(n + 6) .hr-skeleton::after {
+  animation-delay: 400ms;
+}
