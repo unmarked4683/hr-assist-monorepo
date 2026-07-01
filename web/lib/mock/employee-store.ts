@@ -92,6 +92,21 @@ export const employeeStore = {
     return employeeStore.getById(employeeId)
   },
 
+  deleteDayRecord: (employeeId: string, date: IsoDate): Employee | null => {
+    const index = employees.findIndex((item) => item.id === employeeId)
+    if (index === -1) return null
+
+    employees = employees.map((employee) => {
+      if (employee.id !== employeeId) return employee
+      return {
+        ...employee,
+        dayRecords: employee.dayRecords.filter((record) => record.date !== date),
+      }
+    })
+
+    return employeeStore.getById(employeeId)
+  },
+
   delete: (id: string): boolean => {
     const exists = employees.some((item) => item.id === id)
     if (!exists) return false

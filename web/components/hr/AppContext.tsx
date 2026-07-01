@@ -13,6 +13,7 @@ import {
 import { login as loginRequest, logout as logoutRequest, hasAuthSession } from '@/lib/api/auth'
 import {
   createEmployee,
+  deleteDayRecord as deleteDayRecordRequest,
   deleteEmployee as deleteEmployeeRequest,
   fetchEmployees,
   updateEmployee,
@@ -51,6 +52,7 @@ interface AppContextValue {
   openDayStatusModal: (date: IsoDate) => void
   closeDayStatusModal: () => void
   saveDayRecord: (employeeId: string, date: IsoDate, status: DayStatus) => Promise<void>
+  removeDayRecord: (employeeId: string, date: IsoDate) => Promise<void>
 
   isReportModalOpen: boolean
   openReportModal: () => void
@@ -207,6 +209,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     [closeDayStatusModal, refreshEmployees, showSuccessToast],
   )
 
+  const removeDayRecord = useCallback(
+    async (employeeId: string, date: IsoDate) => {
+      await deleteDayRecordRequest(employeeId, date)
+      closeDayStatusModal()
+      showSuccessToast('Usunięto frekwencję')
+      await refreshEmployees()
+    },
+    [closeDayStatusModal, refreshEmployees, showSuccessToast],
+  )
+
   const openReportModal = useCallback(() => setIsReportModalOpen(true), [])
   const closeReportModal = useCallback(() => setIsReportModalOpen(false), [])
 
@@ -251,6 +263,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       openDayStatusModal,
       closeDayStatusModal,
       saveDayRecord,
+      removeDayRecord,
       isReportModalOpen,
       openReportModal,
       closeReportModal,
@@ -277,6 +290,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       openReportModal,
       refreshEmployees,
       saveDayRecord,
+      removeDayRecord,
       saveEmployee,
       deleteEmployee,
       dismissToast,

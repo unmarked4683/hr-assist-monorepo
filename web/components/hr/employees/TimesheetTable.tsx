@@ -12,6 +12,7 @@ import { calcShiftHours } from "@/lib/domain/shift";
 import {
   getRealHours,
   getRowStatus,
+  hasDayRecord,
   isDayAbsent,
 } from "@/lib/domain/attendance";
 import type { Employee, IsoDate } from "@/lib/types";
@@ -110,6 +111,7 @@ export const TimesheetTable = ({
             {days.map(
               ({ day, dateStr, weekend, rowStatus, isToday, isFuture }) => {
                 const isAbsent = !weekend && isDayAbsent(dateStr, employee);
+                const isFutureUnset = isFuture && !weekend && !hasDayRecord(dateStr, employee);
 
                 return (
                   <tr
@@ -121,7 +123,7 @@ export const TimesheetTable = ({
                       weekend
                         ? "text-muted-foreground cursor-default"
                         : "hr-table-row-clickable",
-                      isFuture && !weekend && "text-muted-foreground/60",
+                      isFutureUnset && "text-muted-foreground/60",
                       isAbsent && "animate-pulse-red-row",
                     ]
                       .filter(Boolean)

@@ -7,14 +7,21 @@ export const getRowStatus = (
   employee: Employee,
   todayStr: string,
 ): RowStatus => {
+  const record = employee.dayRecords.find(({ date }) => date === dateStr)
+
+  if (record?.status) {
+    if (record.status === PRESENT_STATUS) return { type: 'ok' }
+    if (record.status === UNEXCUSED_ABSENCE_STATUS) return { type: 'absent' }
+    return { type: 'leave', label: record.status }
+  }
+
   if (dateStr > todayStr) return { type: 'future' }
 
-  const record = employee.dayRecords.find(({ date }) => date === dateStr)
-  if (!record?.status || record.status === PRESENT_STATUS) return { type: 'ok' }
-  if (record.status === UNEXCUSED_ABSENCE_STATUS) return { type: 'absent' }
-
-  return { type: 'leave', label: record.status }
+  return { type: 'ok' }
 }
+
+export const hasDayRecord = (dateStr: string, employee: Employee): boolean =>
+  employee.dayRecords.some(({ date, status }) => date === dateStr && Boolean(status))
 
 export const getRealHours = (dateStr: string, employee: Employee): string => {
   const record = employee.dayRecords.find(({ date }) => date === dateStr)

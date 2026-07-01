@@ -25,3 +25,8 @@ export const upsertDayRecord = async (
   date: IsoDate,
   status: DayStatus,
 ): Promise<Employee | null> => employeeStore.upsertDayRecord(employeeId, date, status)
+
+export const deleteDayRecord = async (
+  employeeId: string,
+  date: IsoDate,
+): Promise<Employee | null> => employeeStore.deleteDayRecord(employeeId, date)

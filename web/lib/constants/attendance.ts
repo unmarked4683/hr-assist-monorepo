@@ -18,3 +18,8 @@ export const DAY_STATUS_OPTIONS: readonly DayStatus[] = [
   'Zwolnienie niepłatne',
   'Służba wojskowa',
 ]
+
+/** Wartość selecta w modalu — usuwa zapis frekwencji dla przyszłego dnia. */
+export const REMOVE_FUTURE_ATTENDANCE = '__remove_future_attendance__' as const
+
+export const REMOVE_FUTURE_ATTENDANCE_LABEL = 'Usuń frekwencję'
