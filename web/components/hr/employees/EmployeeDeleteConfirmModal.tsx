@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Modal, ModalFooter } from '../shared/Modal'
+import { Modal, ModalFooter, ModalHeader } from '../shared/Modal'
 
 interface EmployeeDeleteConfirmModalProps {
   open: boolean
@@ -25,28 +25,15 @@ export const EmployeeDeleteConfirmModal = ({
       cancelRef.current?.focus()
     })
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCancel()
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, onCancel])
+    return () => cancelAnimationFrame(frame)
+  }, [open])
 
   return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      maxWidth="max-w-sm"
-      zIndex="z-[70]"
-      blockBrowserBack={false}
-    >
-      <div className="px-6 pt-6 pb-2">
-        <h2 className="text-base font-semibold text-foreground">Usuń pracownika</h2>
-        <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+    <Modal open={open} onClose={onCancel} maxWidth="max-w-sm" zIndex="z-[70]">
+      <ModalHeader title="Usuń pracownika" onClose={onCancel} className="px-6 pt-5 pb-4" />
+
+      <div className="px-6 pb-2">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Czy na pewno chcesz usunąć pracownika{' '}
           <span className="font-medium text-foreground">{employeeName}</span>? Tej operacji nie można
           cofnąć.
@@ -68,7 +55,7 @@ export const EmployeeDeleteConfirmModal = ({
             onClick={onConfirm}
             className="flex-1 h-11 rounded-lg bg-destructive text-white text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all shadow-sm"
           >
-            Usuń
+            Usuń pracownika
           </button>
         </div>
       </ModalFooter>

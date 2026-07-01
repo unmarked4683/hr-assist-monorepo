@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Eye, EyeOff, User, X } from "lucide-react";
 import { useApp } from "../AppContext";
+import { LoginThemeControl } from "./LoginThemeControl";
 
 export function LoginPage() {
   const router = useRouter();
@@ -109,6 +110,8 @@ export function LoginPage() {
           </form>
         </div>
       </div>
+
+      <LoginThemeControl />
     </div>
   );
 }

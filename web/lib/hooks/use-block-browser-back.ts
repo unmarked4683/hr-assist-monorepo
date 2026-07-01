@@ -1,36 +1,82 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+
+type ModalLayer = {
+  id: number
+  onClose: () => void
+}
+
+const layers: ModalLayer[] = []
+let nextLayerId = 0
+let popListenerAttached = false
+
+const handlePopState = () => {
+  const top = layers.at(-1)
+  if (!top) return
+  layers.pop()
+  top.onClose()
+}
+
+const ensurePopListener = () => {
+  if (popListenerAttached) return
+  window.addEventListener('popstate', handlePopState)
+  popListenerAttached = true
+}
+
+const syncTopLayer = () => {
+  const topId = layers.at(-1)?.id ?? null
+  for (const listener of topLayerListeners) {
+    listener(topId)
+  }
+}
+
+const topLayerListeners = new Set<(topId: number | null) => void>()
 
 /**
  * Gdy modal jest otwarty, dokłada wpis do historii przeglądarki.
- * Cofnięcie (gest, przycisk wstecz) zamyka modal zamiast opuszczać ekran.
+ * Cofnięcie / gest wstecz zamyka najwyższy modal zamiast opuszczać ekran.
  */
 export function useBlockBrowserBackWhileOpen(open: boolean, onClose: () => void) {
-  const pushedRef = useRef(false)
-  const closedByPopRef = useRef(false)
   const onCloseRef = useRef(onClose)
+  const layerIdRef = useRef<number | null>(null)
+  const [isTopLayer, setIsTopLayer] = useState(false)
   onCloseRef.current = onClose
 
   useEffect(() => {
-    if (!open) return
-
-    closedByPopRef.current = false
-    history.pushState({ hrModal: true }, '', window.location.href)
-    pushedRef.current = true
-
-    const onPopState = () => {
-      closedByPopRef.current = true
-      pushedRef.current = false
-      onCloseRef.current()
+    const onTopLayerChange = (topId: number | null) => {
+      setIsTopLayer(topId !== null && topId === layerIdRef.current)
     }
 
-    window.addEventListener('popstate', onPopState)
+    topLayerListeners.add(onTopLayerChange)
     return () => {
-      window.removeEventListener('popstate', onPopState)
-      // Zamknięcie programowe (Zapisz / X): bez history.back(), bo Next.js
-      // traktuje to jak nawigację do poprzedniej trasy (np. lista pracowników).
-      pushedRef.current = false
+      topLayerListeners.delete(onTopLayerChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) {
+      layerIdRef.current = null
+      setIsTopLayer(false)
+      return
+    }
+
+    ensurePopListener()
+
+    const id = ++nextLayerId
+    layerIdRef.current = id
+
+    history.pushState({ hrModal: true }, '', window.location.href)
+    layers.push({ id, onClose: () => onCloseRef.current() })
+    syncTopLayer()
+
+    return () => {
+      const index = layers.findIndex((layer) => layer.id === id)
+      if (index !== -1) layers.splice(index, 1)
+      layerIdRef.current = null
+      syncTopLayer()
     }
   }, [open])
+
+  return isTopLayer
 }

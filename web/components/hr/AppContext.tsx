@@ -43,6 +43,8 @@ interface AppContextValue {
   saveEmployee: (input: EmployeeInput, id?: string) => Promise<void>
   deleteEmployee: (id: string) => Promise<void>
   dismissToast: () => void
+  pendingToast: string | null
+  consumePendingToast: () => void
 
   isDayStatusModalOpen: boolean
   editingDate: IsoDate | null
@@ -69,6 +71,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [editingDate, setEditingDate] = useState<IsoDate | null>(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
+  const [pendingToast, setPendingToast] = useState<string | null>(null)
   const toastIdRef = useRef(0)
   const isLoggedInRef = useRef(isLoggedIn)
   isLoggedInRef.current = isLoggedIn
@@ -152,6 +155,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setToast({ id: toastIdRef.current, message, variant: 'success' })
   }, [])
 
+  const consumePendingToast = useCallback(() => {
+    setPendingToast((message) => {
+      if (message) showSuccessToast(message)
+      return null
+    })
+  }, [showSuccessToast])
+
   const saveEmployee = useCallback(
     async (input: EmployeeInput, id?: string) => {
       if (id) {
@@ -170,11 +180,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteEmployee = useCallback(
     async (id: string) => {
       await deleteEmployeeRequest(id)
-      showSuccessToast('Usunięto pracownika')
       await refreshEmployees()
       closeEmployeeForm()
+      setPendingToast('Usunięto pracownika')
     },
-    [closeEmployeeForm, refreshEmployees, showSuccessToast],
+    [closeEmployeeForm, refreshEmployees],
   )
 
   const openDayStatusModal = useCallback((date: IsoDate) => {
@@ -211,6 +221,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setEditingDate(null)
     setIsReportModalOpen(false)
     setToast(null)
+    setPendingToast(null)
   }, [])
 
   const value = useMemo<AppContextValue>(
@@ -233,6 +244,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       saveEmployee,
       deleteEmployee,
       dismissToast,
+      pendingToast,
+      consumePendingToast,
       isDayStatusModalOpen,
       editingDate,
       openDayStatusModal,
@@ -267,6 +280,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       saveEmployee,
       deleteEmployee,
       dismissToast,
+      consumePendingToast,
+      pendingToast,
       setTheme,
       theme,
     ],

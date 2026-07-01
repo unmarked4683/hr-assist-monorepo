@@ -3,169 +3,16 @@
 import {
   useState,
   useRef,
-  useEffect,
-  useLayoutEffect,
   useCallback,
-  type ElementType,
-  type ReactNode,
-  type RefObject,
 } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Users, Sun, Moon, Monitor, ChevronRight, LogOut } from "lucide-react";
+import { Users, ChevronRight, LogOut } from "lucide-react";
 import { useApp } from "../AppContext";
-import type { Theme } from "@/lib/types";
-
-const THEME_OPTIONS: ReadonlyArray<{
-  value: Theme;
-  label: string;
-  Icon: ElementType;
-}> = [
-  { value: "light", label: "Jasny", Icon: Sun },
-  { value: "dark", label: "Ciemny", Icon: Moon },
-  { value: "system", label: "Systemowy", Icon: Monitor },
-];
-
-const VIEWPORT_EDGE_MARGIN = 10;
-const FLYOUT_GAP = 8;
-
-const getThemeOption = (theme: Theme) =>
-  THEME_OPTIONS.find((option) => option.value === theme) ?? THEME_OPTIONS[2];
+import { AnchoredFlyout } from "../shared/AnchoredFlyout";
+import { getThemeOption, ThemePickerMenu } from "../shared/theme-picker";
 
 const tileClassName =
   "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-sidebar-accent";
-
-interface FlyoutLayout {
-  top: number;
-  left: number;
-  arrowTop: number;
-}
-
-const computeFlyoutLayout = (
-  triggerRect: DOMRect,
-  flyoutHeight: number,
-): FlyoutLayout => {
-  const triggerCenterY = triggerRect.top + triggerRect.height / 2;
-  const maxTop = window.innerHeight - VIEWPORT_EDGE_MARGIN - flyoutHeight;
-  const minTop = VIEWPORT_EDGE_MARGIN;
-
-  const centeredTop = triggerCenterY - flyoutHeight / 2;
-  const top = Math.min(maxTop, Math.max(minTop, centeredTop));
-  const left = triggerRect.right + FLYOUT_GAP;
-  const arrowTop = triggerCenterY - top;
-
-  return { top, left, arrowTop };
-};
-
-interface SidebarFlyoutProps {
-  open: boolean;
-  onClose: () => void;
-  triggerRef: RefObject<HTMLElement | null>;
-  flyoutRef: RefObject<HTMLDivElement | null>;
-  title: string;
-  children: ReactNode;
-}
-
-const SidebarFlyout = ({
-  open,
-  onClose,
-  triggerRef,
-  flyoutRef,
-  title,
-  children,
-}: SidebarFlyoutProps) => {
-  const [layout, setLayout] = useState<FlyoutLayout | null>(null);
-
-  const updateLayout = useCallback(() => {
-    if (!open || !triggerRef.current || !flyoutRef.current) return;
-
-    const triggerRect = triggerRef.current.getBoundingClientRect();
-    const flyoutHeight = flyoutRef.current.getBoundingClientRect().height;
-    setLayout(computeFlyoutLayout(triggerRect, flyoutHeight));
-  }, [flyoutRef, open, triggerRef]);
-
-  useEffect(() => {
-    if (!open) setLayout(null);
-  }, [open]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    updateLayout();
-
-    const flyoutElement = flyoutRef.current;
-    if (!flyoutElement) return;
-
-    const resizeObserver = new ResizeObserver(updateLayout);
-    resizeObserver.observe(flyoutElement);
-
-    window.addEventListener("resize", updateLayout);
-    window.addEventListener("scroll", updateLayout, true);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", updateLayout);
-      window.removeEventListener("scroll", updateLayout, true);
-    };
-  }, [flyoutRef, open, updateLayout, children]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleMouseDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (flyoutRef.current?.contains(target)) return;
-      if (triggerRef.current?.contains(target)) return;
-      onClose();
-    };
-
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
-  }, [flyoutRef, onClose, open, triggerRef]);
-
-  if (!open) return null;
-
-  const fallbackTop = triggerRef.current
-    ? triggerRef.current.getBoundingClientRect().top
-    : VIEWPORT_EDGE_MARGIN;
-  const fallbackLeft = triggerRef.current
-    ? triggerRef.current.getBoundingClientRect().right + FLYOUT_GAP
-    : 0;
-
-  return createPortal(
-    <div
-      className="fixed z-100"
-      style={{
-        top: layout?.top ?? fallbackTop,
-        left: layout?.left ?? fallbackLeft,
-        visibility: layout ? "visible" : "hidden",
-      }}
-      role="dialog"
-      aria-label={title}
-    >
-      {layout && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -left-[5px] w-2.5 h-2.5 rotate-45 bg-popover border-l border-b border-border"
-          style={{
-            top: layout.arrowTop,
-            transform: "translateY(-50%) rotate(45deg)",
-          }}
-        />
-      )}
-
-      <div
-        ref={flyoutRef}
-        className="w-52 bg-popover border border-border rounded-xl shadow-lg p-3"
-      >
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
-          {title}
-        </p>
-        {children}
-      </div>
-    </div>,
-    document.body,
-  );
-};
 
 export const Sidebar = () => {
   const router = useRouter();
@@ -191,10 +38,6 @@ export const Sidebar = () => {
   const handleUserTriggerClick = () => {
     setThemeMenuOpen(false);
     setUserMenuOpen((current) => !current);
-  };
-
-  const handleThemeSelect = (value: Theme) => {
-    setTheme(value);
   };
 
   const handleLogout = async () => {
@@ -272,41 +115,24 @@ export const Sidebar = () => {
           </button>
         </div>
 
-        <SidebarFlyout
+        <AnchoredFlyout
           open={themeMenuOpen}
           onClose={closeThemeMenu}
           triggerRef={themeTriggerRef}
           flyoutRef={themeFlyoutRef}
           title="Motyw"
+          placement="right"
         >
-          <div className="flex flex-col gap-0.5">
-            {THEME_OPTIONS.map(({ value, label, Icon }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => handleThemeSelect(value)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors w-full text-left ${
-                  theme === value
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "hover:bg-accent text-foreground"
-                }`}
-              >
-                <Icon size={15} />
-                {label}
-                {theme === value && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
-                )}
-              </button>
-            ))}
-          </div>
-        </SidebarFlyout>
+          <ThemePickerMenu theme={theme} onSelect={setTheme} />
+        </AnchoredFlyout>
 
-        <SidebarFlyout
+        <AnchoredFlyout
           open={userMenuOpen}
           onClose={closeUserMenu}
           triggerRef={userTriggerRef}
           flyoutRef={userFlyoutRef}
           title="Konto"
+          placement="right"
         >
           <button
             type="button"
@@ -316,7 +142,7 @@ export const Sidebar = () => {
             <LogOut size={15} />
             Wyloguj
           </button>
-        </SidebarFlyout>
+        </AnchoredFlyout>
       </div>
     </aside>
   );

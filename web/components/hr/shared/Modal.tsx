@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { useBlockBrowserBackWhileOpen } from '@/lib/hooks/use-block-browser-back'
 import { cn } from '@/lib/utils'
@@ -16,7 +17,6 @@ interface ModalProps {
   maxWidth?: string
   zIndex?: string
   className?: string
-  blockBrowserBack?: boolean
 }
 
 export function Modal({
@@ -26,9 +26,19 @@ export function Modal({
   maxWidth = 'max-w-md',
   zIndex = 'z-50',
   className,
-  blockBrowserBack = true,
 }: ModalProps) {
-  useBlockBrowserBackWhileOpen(blockBrowserBack ? open : false, onClose)
+  const isTopLayer = useBlockBrowserBackWhileOpen(open, onClose)
+
+  useEffect(() => {
+    if (!open || !isTopLayer) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [open, isTopLayer, onClose])
 
   if (!open) return null
 
@@ -36,8 +46,13 @@ export function Modal({
     <div
       className={cn('fixed inset-0 flex items-center justify-center p-4', zIndex)}
       style={backdropStyle}
+      onClick={onClose}
+      role="presentation"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(event) => event.stopPropagation()}
         className={cn(
           'bg-card border border-border rounded-2xl shadow-2xl w-full flex flex-col overflow-visible',
           maxWidth,
@@ -68,6 +83,7 @@ export function ModalHeader({ title, onClose, className }: ModalHeaderProps) {
     >
       {title && <h2 className="text-base font-semibold text-foreground">{title}</h2>}
       <button
+        type="button"
         onClick={onClose}
         className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
         aria-label="Zamknij"

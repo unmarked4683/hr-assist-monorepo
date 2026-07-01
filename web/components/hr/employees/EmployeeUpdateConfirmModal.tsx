@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Modal, ModalFooter } from '../shared/Modal'
+import { Modal, ModalFooter, ModalHeader } from '../shared/Modal'
 
 interface EmployeeUpdateConfirmModalProps {
   open: boolean
@@ -23,28 +23,15 @@ export const EmployeeUpdateConfirmModal = ({
       cancelRef.current?.focus()
     })
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCancel()
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, onCancel])
+    return () => cancelAnimationFrame(frame)
+  }, [open])
 
   return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      maxWidth="max-w-sm"
-      zIndex="z-[70]"
-      blockBrowserBack={false}
-    >
-      <div className="px-6 pt-6 pb-2">
-        <h2 className="text-base font-semibold text-foreground">Potwierdź zapis</h2>
-        <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+    <Modal open={open} onClose={onCancel} maxWidth="max-w-sm" zIndex="z-[70]">
+      <ModalHeader title="Potwierdź zapis" onClose={onCancel} className="px-6 pt-5 pb-4" />
+
+      <div className="px-6 pb-2">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Zmiany dotyczą wszystkich dni tego pracownika. Tej operacji nie można cofnąć. Czy na
           pewno chcesz zapisać?
         </p>

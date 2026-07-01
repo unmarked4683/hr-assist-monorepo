@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Building2, Settings2 } from 'lucide-react'
 import { useApp } from '../AppContext'
 import { Modal, ModalHeader, ModalFooter } from '../shared/Modal'
@@ -18,7 +17,6 @@ import { isOvernight, shiftHour } from '@/lib/domain/shift'
 import type { Company, Employee, EmployeeInput, Location, WorkDimension } from '@/lib/types'
 import { FormSelect, HourPicker, AutocompleteInput, DimensionSelect } from './employee-form-controls'
 import { EmployeeUpdateConfirmModal } from './EmployeeUpdateConfirmModal'
-import { EmployeeDeleteConfirmModal } from './EmployeeDeleteConfirmModal'
 
 type EmployeeFormState = EmployeeInput
 
@@ -36,9 +34,7 @@ const buildInitial = (employee?: Employee | null): EmployeeFormState => ({
 })
 
 export const EmployeeFormModal = () => {
-  const router = useRouter()
-  const { isEmployeeFormOpen, editingEmployee, closeEmployeeForm, saveEmployee, deleteEmployee } =
-    useApp()
+  const { isEmployeeFormOpen, editingEmployee, closeEmployeeForm, saveEmployee } = useApp()
   const isEdit = Boolean(editingEmployee)
 
   const [form, setForm] = useState<EmployeeFormState>(() => buildInitial(editingEmployee))
@@ -46,12 +42,10 @@ export const EmployeeFormModal = () => {
     buildInitial(editingEmployee),
   )
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!isEmployeeFormOpen) {
       setIsConfirmOpen(false)
-      setIsDeleteConfirmOpen(false)
       return
     }
     const initial = buildInitial(editingEmployee)
@@ -104,18 +98,6 @@ export const EmployeeFormModal = () => {
     closeEmployeeForm()
     void saveEmployee(payload, employeeId)
   }
-
-  const handleConfirmDelete = () => {
-    const employeeId = editingEmployee?.id
-    if (!employeeId) return
-    setIsDeleteConfirmOpen(false)
-    closeEmployeeForm()
-    void deleteEmployee(employeeId).then(() => router.push('/employees'))
-  }
-
-  const employeeName = editingEmployee
-    ? `${editingEmployee.firstName} ${editingEmployee.lastName}`
-    : ''
 
   return (
     <>
@@ -230,16 +212,7 @@ export const EmployeeFormModal = () => {
         </div>
       </form>
 
-      <ModalFooter className="px-6 pb-5 pt-3 border-t border-border flex flex-col gap-3">
-        {isEdit && (
-          <button
-            type="button"
-            onClick={() => setIsDeleteConfirmOpen(true)}
-            className="w-full h-10 rounded-lg border border-destructive/30 text-destructive text-sm font-semibold hover:bg-destructive/10 active:scale-[0.99] transition-all"
-          >
-            Usuń pracownika
-          </button>
-        )}
+      <ModalFooter className="px-6 pb-5 pt-3 border-t border-border">
         <button
           type="submit"
           form="employee-form"
@@ -259,13 +232,6 @@ export const EmployeeFormModal = () => {
       open={isConfirmOpen}
       onCancel={() => setIsConfirmOpen(false)}
       onConfirm={handleConfirmSave}
-    />
-
-    <EmployeeDeleteConfirmModal
-      open={isDeleteConfirmOpen}
-      employeeName={employeeName}
-      onCancel={() => setIsDeleteConfirmOpen(false)}
-      onConfirm={handleConfirmDelete}
     />
     </>
   )

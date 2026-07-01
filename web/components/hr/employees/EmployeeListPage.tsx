@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Plus, MapPin } from 'lucide-react'
 import { useApp } from '../AppContext'
@@ -33,8 +33,13 @@ function ColumnGroup() {
 
 export function EmployeeListPage() {
   const router = useRouter()
-  const { employees, isEmployeesReady, openCreateEmployeeForm } = useApp()
+  const { employees, isEmployeesReady, openCreateEmployeeForm, pendingToast, consumePendingToast } =
+    useApp()
   const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    if (pendingToast) consumePendingToast()
+  }, [pendingToast, consumePendingToast])
 
   const filteredEmployees = employees.filter((emp) => {
     const q = searchQuery.toLowerCase()

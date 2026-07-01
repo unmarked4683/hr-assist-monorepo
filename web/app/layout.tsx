@@ -23,8 +23,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pl" className={`${inter.variable} ${geistMono.variable} bg-background`}>
-      <body className="font-sans antialiased h-screen max-h-screen min-h-screen overflow-hidden">
+    <html
+      lang="pl"
+      className={`${inter.variable} ${geistMono.variable} bg-background`}
+      suppressHydrationWarning
+    >
+      <body
+        className="font-sans antialiased h-screen max-h-screen min-h-screen overflow-hidden"
+        suppressHydrationWarning
+      >
         <AppProvider>{children}</AppProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
