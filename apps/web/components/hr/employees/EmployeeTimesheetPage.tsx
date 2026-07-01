@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getInitialTimesheetPeriod, parseIsoDate, type Employee, type IsoDate } from '@hr-assist/shared'
+import { getInitialTimesheetPeriod, getTodayIsoDate, parseIsoDate, type Employee, type IsoDate } from '@hr-assist/shared'
 import { useApp } from '../AppContext'
 import { AppLayout } from '../layout/AppLayout'
 import { EmployeeProfileCard } from './EmployeeProfileCard'
@@ -33,6 +33,13 @@ export const EmployeeTimesheetPage = ({ employee }: EmployeeTimesheetPageProps) 
     setPeriod({ month, year })
   }
 
+  const handleGoToToday = () => {
+    const today = getTodayIsoDate()
+    const { month, year } = parseIsoDate(today)
+    setPeriod({ month, year })
+    setScrollRequest({ date: today, key: Date.now() })
+  }
+
   const handleUnexcusedAbsenceSelect = (date: IsoDate) => {
     const { month, year } = parseIsoDate(date)
     setPeriod({ month, year })
@@ -57,6 +64,7 @@ export const EmployeeTimesheetPage = ({ employee }: EmployeeTimesheetPageProps) 
           month={period.month}
           year={period.year}
           onPeriodChange={handlePeriodChange}
+          onGoToToday={handleGoToToday}
           onUnexcusedAbsenceSelect={handleUnexcusedAbsenceSelect}
           absenceRefreshToken={absenceRefreshToken}
         />

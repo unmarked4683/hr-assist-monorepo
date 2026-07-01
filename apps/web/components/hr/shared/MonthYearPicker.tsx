@@ -14,6 +14,7 @@ interface MonthYearPickerProps {
   yearCount?: number
   compact?: boolean
   className?: string
+  onGoToToday?: () => void
 }
 
 export function MonthYearPicker({
@@ -26,6 +27,7 @@ export function MonthYearPicker({
   yearCount = 10,
   compact = false,
   className,
+  onGoToToday,
 }: MonthYearPickerProps) {
   const canGoBack = minYear === undefined || !(year === minYear && month === minMonth)
 
@@ -107,6 +109,19 @@ export function MonthYearPicker({
       >
         <ChevronRight size={15} />
       </button>
+
+      {onGoToToday ? (
+        <button
+          type="button"
+          onClick={onGoToToday}
+          className={cn(
+            'px-2.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-accent transition-colors',
+            compact ? 'h-8' : 'h-9',
+          )}
+        >
+          Dziś
+        </button>
+      ) : null}
     </div>
   )
 }

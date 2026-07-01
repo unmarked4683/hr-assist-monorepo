@@ -20,6 +20,7 @@ interface EmployeeProfileCardProps {
   month: number;
   year: number;
   onPeriodChange: (month: number, year: number) => void;
+  onGoToToday: () => void;
   onUnexcusedAbsenceSelect: (date: IsoDate) => void;
   absenceRefreshToken: string;
 }
@@ -29,6 +30,7 @@ export function EmployeeProfileCard({
   month,
   year,
   onPeriodChange,
+  onGoToToday,
   onUnexcusedAbsenceSelect,
   absenceRefreshToken,
 }: EmployeeProfileCardProps) {
@@ -141,6 +143,7 @@ export function EmployeeProfileCard({
             month={month}
             year={year}
             onChange={onPeriodChange}
+            onGoToToday={onGoToToday}
             compact
           />
           <UnexcusedAbsenceBell
