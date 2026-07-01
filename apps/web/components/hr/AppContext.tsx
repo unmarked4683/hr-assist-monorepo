@@ -217,9 +217,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const saveDayRecord = useCallback(
     async (employeeId: string, date: IsoDate, status: DayStatus) => {
       await upsertDayRecord(employeeId, date, status)
+      await refreshEmployees()
       closeDayStatusModal()
       showSuccessToast('Zaktualizowano frekwencję')
-      await refreshEmployees()
     },
     [closeDayStatusModal, refreshEmployees, showSuccessToast],
   )
@@ -227,9 +227,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const removeDayRecord = useCallback(
     async (employeeId: string, date: IsoDate) => {
       await deleteDayRecordRequest(employeeId, date)
+      await refreshEmployees()
       closeDayStatusModal()
       showSuccessToast('Usunięto frekwencję')
-      await refreshEmployees()
     },
     [closeDayStatusModal, refreshEmployees, showSuccessToast],
   )

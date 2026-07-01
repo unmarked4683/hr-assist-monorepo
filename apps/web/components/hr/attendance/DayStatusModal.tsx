@@ -30,11 +30,17 @@ export const DayStatusModal = ({ employee }: { employee: Employee }) => {
   const [status, setStatus] = useState<DayStatusFormValue>(() =>
     resolveStatus(employee, editingDate),
   )
+  const [initialStatus, setInitialStatus] = useState<DayStatusFormValue>(() =>
+    resolveStatus(employee, editingDate),
+  )
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (!isDayStatusModalOpen || !editingDate) return
-    setStatus(resolveStatus(employee, editingDate))
-  }, [employee.dayRecords, editingDate, isDayStatusModalOpen])
+    const resolved = resolveStatus(employee, editingDate)
+    setStatus(resolved)
+    setInitialStatus(resolved)
+  }, [employee, editingDate, isDayStatusModalOpen])
 
   if (!isDayStatusModalOpen || !editingDate) return null
 
@@ -56,16 +62,29 @@ export const DayStatusModal = ({ employee }: { employee: Employee }) => {
       ? `Godziny pracy: ${employee.startHour} - ${employee.endHour} (Realny czas: ${calcShiftHours(employee.startHour, employee.endHour)}h)`
       : 'Godziny pracy: Brak (Realny czas: 0h)'
 
-  const handleSave = () => {
-    if (status === REMOVE_FUTURE_ATTENDANCE) {
-      void removeDayRecord(employee.id, editingDate)
-      return
+  const isDirty = status !== initialStatus
+  const canSave = isDirty && !isSaving
+
+  const handleSave = async () => {
+    if (!canSave) return
+
+    setIsSaving(true)
+    try {
+      if (status === REMOVE_FUTURE_ATTENDANCE) {
+        await removeDayRecord(employee.id, editingDate)
+        return
+      }
+      await saveDayRecord(employee.id, editingDate, status)
+    } finally {
+      setIsSaving(false)
     }
-    void saveDayRecord(employee.id, editingDate, status)
   }
 
-  const saveLabel =
-    status === REMOVE_FUTURE_ATTENDANCE ? 'Usuń frekwencję' : 'Aktualizuj'
+  const saveLabel = isSaving
+    ? 'Zapisywanie…'
+    : status === REMOVE_FUTURE_ATTENDANCE
+      ? 'Usuń frekwencję'
+      : 'Aktualizuj'
 
   return (
     <Modal open={isDayStatusModalOpen} onClose={closeDayStatusModal} maxWidth="max-w-md">
@@ -99,11 +118,14 @@ export const DayStatusModal = ({ employee }: { employee: Employee }) => {
 
       <ModalFooter className="px-6 pb-6 pt-4">
         <button
-          onClick={handleSave}
-          className={`w-full h-11 rounded-lg text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all shadow-sm ${
-            isRemoving
-              ? 'bg-destructive text-destructive-foreground'
-              : 'bg-primary text-primary-foreground'
+          onClick={() => void handleSave()}
+          disabled={!canSave}
+          className={`w-full h-11 rounded-lg text-sm font-semibold transition-all ${
+            !canSave
+              ? 'bg-muted text-muted-foreground cursor-not-allowed'
+              : isRemoving
+                ? 'bg-destructive text-destructive-foreground hover:opacity-90 active:scale-[0.99] shadow-sm'
+                : 'bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.99] shadow-sm'
           }`}
         >
           {saveLabel}
