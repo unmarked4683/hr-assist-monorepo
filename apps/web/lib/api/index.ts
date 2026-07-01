@@ -17,3 +17,5 @@ export {
 export { fetchCompanies } from '@/lib/api/companies'
 
 export { fetchPositionSuggestions } from '@/lib/api/positions'
+
+export { fetchHolidays, syncHolidays } from '@/lib/api/holidays'

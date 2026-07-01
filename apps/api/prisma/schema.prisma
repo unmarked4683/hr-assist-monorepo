@@ -16,3 +16,16 @@ model User {
 
   @@index([email])
 }
+
+model DayOff {
+  id        String   @id @default(cuid())
+  date      DateTime @unique @db.Date
+  name      String
+  /// Maps to DAY_TYPES in @hr-assist/shared (0=STATUTORY, 1=COMPANY_GIFT)
+  typeCode  Int      @map("type_code") @db.SmallInt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([date], map: "DayOff_date_idx")
+  @@map("DayOff")
+}

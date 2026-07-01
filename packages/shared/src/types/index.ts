@@ -32,3 +32,10 @@ export {
 export { MONTH_NAMES_NOM, MONTH_NAMES_GEN, DAY_ABBR } from "./dates";
 
 export type { UnexcusedAbsence } from "./unexcused-absence";
+
+export {
+  DAY_TYPES,
+  type DayTypeCode,
+  type DayOff,
+  type HolidaySyncResult,
+} from "./holidays";

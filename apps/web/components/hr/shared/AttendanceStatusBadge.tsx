@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { DayStatus, getDayStatusLabel, type RowStatus, type ListAttendanceStatus } from '@hr-assist/shared'
 
 type ListStatus = ListAttendanceStatus
@@ -21,7 +22,7 @@ function toRowStatus(props: Props): RowStatus {
   return props.status === 'action-required' ? { type: 'absent' } : { type: 'ok' }
 }
 
-export function AttendanceStatusBadge(props: Props) {
+export const AttendanceStatusBadge = memo(function AttendanceStatusBadge(props: Props) {
   const status = toRowStatus(props)
 
   if (status.type === 'future') {
@@ -68,4 +69,4 @@ export function AttendanceStatusBadge(props: Props) {
       </span>
     </span>
   )
-}
+})

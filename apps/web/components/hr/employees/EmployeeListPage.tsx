@@ -1,26 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, MapPin } from 'lucide-react'
-import { useApp } from '../AppContext'
-import { employeeNeedsAction, getLocationLabel, toListAttendanceStatus, type Location } from '@hr-assist/shared'
+import { Search, Plus } from 'lucide-react'
+import { useApp, useEmployees } from '../AppContext'
 import { AppLayout } from '../layout/AppLayout'
-import { AttendanceStatusBadge } from '../shared/AttendanceStatusBadge'
+import { EmployeeListRow } from './EmployeeListRow'
 import { EmployeeListSkeleton } from './EmployeeListSkeleton'
 
 const COLUMNS = ['Imię', 'Nazwisko', 'Stanowisko', 'Lokalizacja', 'Status'] as const
 
-function LocationBadge({ location }: { location: Location }) {
-  return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
-      <MapPin size={10} />
-      {getLocationLabel(location)}
-    </span>
-  )
-}
-
-function ColumnGroup() {
+const ColumnGroup = memo(function ColumnGroup() {
   return (
     <colgroup>
       <col className="w-[16%]" />
@@ -30,27 +20,36 @@ function ColumnGroup() {
       <col className="w-[20%]" />
     </colgroup>
   )
-}
+})
 
 export function EmployeeListPage() {
   const router = useRouter()
-  const { employees, isEmployeesReady, openCreateEmployeeForm, pendingToast, consumePendingToast } =
-    useApp()
+  const { employees, isEmployeesReady } = useEmployees()
+  const { openCreateEmployeeForm, pendingToast, consumePendingToast } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     if (pendingToast) consumePendingToast()
   }, [pendingToast, consumePendingToast])
 
-  const filteredEmployees = employees.filter((emp) => {
-    const q = searchQuery.toLowerCase()
-    return (
-      emp.firstName.toLowerCase().includes(q) ||
-      emp.lastName.toLowerCase().includes(q) ||
-      emp.position.toLowerCase().includes(q) ||
-      emp.location.toLowerCase().includes(q)
+  const filteredEmployees = useMemo(() => {
+    const query = searchQuery.toLowerCase()
+
+    return employees.filter(
+      (employee) =>
+        employee.firstName.toLowerCase().includes(query) ||
+        employee.lastName.toLowerCase().includes(query) ||
+        employee.position.toLowerCase().includes(query) ||
+        employee.location.toLowerCase().includes(query),
     )
-  })
+  }, [employees, searchQuery])
+
+  const handleSelectEmployee = useCallback(
+    (employeeId: string) => {
+      router.push(`/employees/${employeeId}`)
+    },
+    [router],
+  )
 
   if (!isEmployeesReady) {
     return <EmployeeListSkeleton />
@@ -68,7 +67,7 @@ export function EmployeeListPage() {
             type="text"
             placeholder="Szukaj pracowników..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(event) => setSearchQuery(event.target.value)}
             className="w-full h-9 pl-9 pr-4 rounded-lg border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
           />
         </div>
@@ -110,40 +109,13 @@ export function EmployeeListPage() {
                     </td>
                   </tr>
                 )}
-                {filteredEmployees.map((emp) => {
-                  const needsAction = employeeNeedsAction(emp)
-                  return (
-                    <tr
-                      key={emp.id}
-                      onClick={() => router.push(`/employees/${emp.id}`)}
-                      className={[
-                        'hr-table-row hr-table-row-clickable',
-                        needsAction && 'animate-pulse-red-row',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                    >
-                      <td className="px-3 py-2.5 text-center font-medium text-foreground">
-                        {emp.firstName}
-                      </td>
-                      <td className="px-3 py-2.5 text-center text-foreground">
-                        {emp.lastName}
-                      </td>
-                      <td className="px-3 py-2.5 text-center text-muted-foreground">
-                        {emp.position}
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <LocationBadge location={emp.location} />
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <AttendanceStatusBadge
-                          variant="list"
-                          status={toListAttendanceStatus(needsAction)}
-                        />
-                      </td>
-                    </tr>
-                  )
-                })}
+                {filteredEmployees.map((employee) => (
+                  <EmployeeListRow
+                    key={employee.id}
+                    employee={employee}
+                    onSelect={handleSelectEmployee}
+                  />
+                ))}
               </tbody>
             </table>
           </div>

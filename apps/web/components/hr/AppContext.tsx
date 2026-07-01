@@ -25,6 +25,16 @@ import {
 import type { Company, DayStatus, Employee, EmployeeInput, IsoDate } from '@hr-assist/shared'
 import type { Theme } from '@/lib/types/theme'
 import { Toast, type ToastState } from '@/components/hr/shared/Toast'
+import { mergeEmployeesPreservingReferences } from '@/lib/utils/employee-merge'
+
+interface EmployeesContextValue {
+  employees: Employee[]
+  isEmployeesReady: boolean
+  companies: Company[]
+  getCompanyName: (companyId: string) => string
+  refreshEmployees: () => Promise<void>
+  getEmployee: (id: string) => Employee | null
+}
 
 interface AppContextValue {
   isLoggedIn: boolean
@@ -34,13 +44,6 @@ interface AppContextValue {
 
   theme: Theme
   setTheme: (theme: Theme) => void
-
-  employees: Employee[]
-  isEmployeesReady: boolean
-  companies: Company[]
-  getCompanyName: (companyId: string) => string
-  refreshEmployees: () => Promise<void>
-  getEmployee: (id: string) => Employee | null
 
   isEmployeeFormOpen: boolean
   editingEmployee: Employee | null
@@ -66,6 +69,7 @@ interface AppContextValue {
 }
 
 const AppCtx = createContext<AppContextValue | null>(null)
+const EmployeesCtx = createContext<EmployeesContextValue | null>(null)
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -94,11 +98,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   const refreshEmployees = useCallback(async () => {
-    setIsEmployeesReady(false)
     try {
       const [employeeData, companyData] = await Promise.all([fetchEmployees(), fetchCompanies()])
       if (!isLoggedInRef.current) return
-      setEmployees(employeeData)
+      setEmployees((previous) => mergeEmployeesPreservingReferences(previous, employeeData))
       setCompanies(companyData)
     } catch {
       if (!isLoggedInRef.current) return
@@ -252,6 +255,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setPendingToast(null)
   }, [])
 
+  const employeesValue = useMemo<EmployeesContextValue>(
+    () => ({
+      employees,
+      isEmployeesReady,
+      companies,
+      getCompanyName,
+      refreshEmployees,
+      getEmployee,
+    }),
+    [companies, employees, getCompanyName, getEmployee, isEmployeesReady, refreshEmployees],
+  )
+
   const value = useMemo<AppContextValue>(
     () => ({
       isLoggedIn,
@@ -260,12 +275,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       logout,
       theme,
       setTheme,
-      employees,
-      isEmployeesReady,
-      companies,
-      getCompanyName,
-      refreshEmployees,
-      getEmployee,
       isEmployeeFormOpen,
       editingEmployee,
       openCreateEmployeeForm,
@@ -292,13 +301,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       closeReportModal,
       editingDate,
       editingEmployee,
-      employees,
-      getCompanyName,
-      companies,
-      getEmployee,
       isDayStatusModalOpen,
       isEmployeeFormOpen,
-      isEmployeesReady,
       isLoggedIn,
       isReportModalOpen,
       login,
@@ -308,7 +312,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       openDayStatusModal,
       openEditEmployeeForm,
       openReportModal,
-      refreshEmployees,
       saveDayRecord,
       removeDayRecord,
       saveEmployee,
@@ -322,11 +325,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   )
 
   return (
-    <AppCtx.Provider value={value}>
-      {children}
-      <Toast toast={toast} onDismiss={dismissToast} />
-    </AppCtx.Provider>
+    <EmployeesCtx.Provider value={employeesValue}>
+      <AppCtx.Provider value={value}>
+        {children}
+        <Toast toast={toast} onDismiss={dismissToast} />
+      </AppCtx.Provider>
+    </EmployeesCtx.Provider>
   )
+}
+
+export const useEmployees = (): EmployeesContextValue => {
+  const context = useContext(EmployeesCtx)
+  if (!context) throw new Error('useEmployees must be used within AppProvider')
+  return context
 }
 
 export const useApp = (): AppContextValue => {

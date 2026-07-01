@@ -9,7 +9,7 @@ import {
   getLocationLabel,
   isFullWorkDimension,
 } from '@hr-assist/shared'
-import { useApp } from "../AppContext";
+import { useApp, useEmployees } from "../AppContext";
 import { MonthYearPicker } from "../shared/MonthYearPicker";
 import { EmployeeDeleteConfirmModal } from "./EmployeeDeleteConfirmModal";
 import { UnexcusedAbsenceBell } from "./UnexcusedAbsenceBell";
@@ -35,7 +35,8 @@ export function EmployeeProfileCard({
   absenceRefreshToken,
 }: EmployeeProfileCardProps) {
   const router = useRouter();
-  const { openEditEmployeeForm, openReportModal, deleteEmployee, getCompanyName } = useApp();
+  const { openEditEmployeeForm, openReportModal, deleteEmployee } = useApp();
+  const { getCompanyName } = useEmployees();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const employeeName = `${employee.firstName} ${employee.lastName}`;

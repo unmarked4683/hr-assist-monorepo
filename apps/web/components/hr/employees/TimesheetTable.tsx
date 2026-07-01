@@ -15,8 +15,7 @@ import {
   type Employee,
   type IsoDate,
 } from "@hr-assist/shared";
-import { AttendanceStatusBadge } from "../shared/AttendanceStatusBadge";
-import { TodayDayCell } from "../shared/TodayDayCell";
+import { TimesheetDayRow } from "./TimesheetDayRow";
 
 interface TimesheetTableProps {
   employee: Employee;
@@ -185,73 +184,33 @@ export const TimesheetTable = ({
         <table className="w-full text-sm table-fixed">
           <TimesheetColumnGroup />
           <tbody className="hr-table-zebra">
-            {days.map(
-              ({ day, dateStr, weekend, rowStatus, isToday, isFuture }) => {
+            {days.map(({ day, dateStr, weekend, rowStatus, isToday, isFuture }) => {
                 const isAbsent = !weekend && isDayAbsent(dateStr, employee);
                 const isFutureUnset = isFuture && !weekend && !hasDayRecord(dateStr, employee);
+                const workRangeLabel = `${employee.startHour} – ${employee.endHour}`;
 
                 return (
-                  <tr
+                  <TimesheetDayRow
                     key={dateStr}
                     ref={(element) => {
                       if (element) rowRefs.current.set(dateStr, element);
                       else rowRefs.current.delete(dateStr);
                     }}
-                    onClick={() => !weekend && onDayClick(dateStr)}
-                    className={[
-                      "hr-table-row",
-                      weekend
-                        ? "text-muted-foreground cursor-default"
-                        : "hr-table-row-clickable",
-                      isFutureUnset && "text-muted-foreground/60",
-                      isAbsent && "animate-pulse-red-row",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    {isToday ? (
-                      <TodayDayCell day={day} />
-                    ) : (
-                      <td className="px-2 py-2.5 text-center font-medium tabular-nums">
-                        {day}
-                      </td>
-                    )}
-                    <td className="px-2 py-2.5 text-center">
-                      {getDayOfWeek(year, month, day)}
-                    </td>
-                    <td className="px-2 py-2.5 text-center tabular-nums whitespace-nowrap">
-                      {weekend ? (
-                        <span className="text-xs text-muted-foreground/60 italic">
-                          wolne
-                        </span>
-                      ) : (
-                        `${employee.startHour} – ${employee.endHour}`
-                      )}
-                    </td>
-                    <td className="px-2 py-2.5 text-center tabular-nums">
-                      {weekend ? "—" : nomHours}
-                    </td>
-                    <td className="px-2 py-2.5 text-center tabular-nums">
-                      {weekend ? "—" : getRealHours(dateStr, employee)}
-                    </td>
-                    <td className="px-2 py-2.5 text-center">
-                      {weekend ? (
-                        <span className="text-xs text-muted-foreground/60 italic">
-                          —
-                        </span>
-                      ) : (
-                        rowStatus && (
-                          <AttendanceStatusBadge
-                            variant="table"
-                            status={rowStatus}
-                          />
-                        )
-                      )}
-                    </td>
-                  </tr>
+                    day={day}
+                    dateStr={dateStr}
+                    dayOfWeek={getDayOfWeek(year, month, day)}
+                    weekend={weekend}
+                    rowStatus={rowStatus}
+                    isToday={isToday}
+                    isFutureUnset={isFutureUnset}
+                    isAbsent={isAbsent}
+                    workRangeLabel={workRangeLabel}
+                    nominalHours={nomHours}
+                    realHours={getRealHours(dateStr, employee)}
+                    onDayClick={onDayClick}
+                  />
                 );
-              },
-            )}
+              })}
           </tbody>
         </table>
       </div>

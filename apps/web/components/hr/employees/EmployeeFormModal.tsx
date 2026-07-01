@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Building2, Settings2 } from 'lucide-react'
-import { useApp } from '../AppContext'
+import { useApp, useEmployees } from '../AppContext'
 import { Modal, ModalHeader, ModalFooter } from '../shared/Modal'
 import { fetchPositionSuggestions } from '@/lib/api'
 import { LOCAL_POSITION_SUGGESTION_SEED } from '@/lib/constants/form-seeds'
@@ -45,8 +45,8 @@ const buildInitial = (
 })
 
 export const EmployeeFormModal = () => {
-  const { isEmployeeFormOpen, editingEmployee, closeEmployeeForm, saveEmployee, companies } =
-    useApp()
+  const { isEmployeeFormOpen, editingEmployee, closeEmployeeForm, saveEmployee } = useApp()
+  const { companies } = useEmployees()
   const isEdit = Boolean(editingEmployee)
   const defaultCompanyId = companies[0]?.id ?? ''
 

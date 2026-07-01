@@ -11,6 +11,11 @@ export const envSchema = z.object({
     .min(32, 'JWT_SECRET must be at least 32 characters long'),
   JWT_EXPIRES_IN: z.string().min(1).default('1d'),
   BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
+  HOLIDAY_COUNTRY_CODE: z.string().min(2).max(2).default('PL'),
+  HOLIDAY_API_BASE_URL: z
+    .string()
+    .url()
+    .default('https://date.nager.at/api/v4'),
 });
 
 export type Env = z.infer<typeof envSchema>;

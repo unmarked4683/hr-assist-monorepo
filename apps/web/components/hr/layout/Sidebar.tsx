@@ -5,8 +5,9 @@ import {
   useRef,
   useCallback,
 } from "react";
-import { useRouter } from "next/navigation";
-import { Users, ChevronRight, LogOut } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Users, CalendarDays, ChevronRight, LogOut } from "lucide-react";
 import { useApp } from "../AppContext";
 import { AnchoredFlyout } from "../shared/AnchoredFlyout";
 import { getThemeOption, ThemePickerMenu } from "../shared/theme-picker";
@@ -14,8 +15,16 @@ import { getThemeOption, ThemePickerMenu } from "../shared/theme-picker";
 const tileClassName =
   "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-sidebar-accent";
 
+const navLinkClassName = (isActive: boolean) =>
+  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+    isActive
+      ? "bg-sidebar-accent text-sidebar-primary cursor-default select-none"
+      : "text-sidebar-foreground hover:bg-sidebar-accent/70"
+  }`;
+
 export const Sidebar = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { theme, setTheme, logout } = useApp();
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -54,11 +63,15 @@ export const Sidebar = () => {
         </span>
       </div>
 
-      <nav className="flex-1 px-3 py-2">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent text-sidebar-primary font-medium text-sm cursor-default select-none">
+      <nav className="flex-1 px-3 py-2 space-y-1">
+        <Link href="/employees" className={navLinkClassName(pathname.startsWith("/employees"))}>
           <Users size={17} />
           <span>Pracownicy</span>
-        </div>
+        </Link>
+        <Link href="/holidays" className={navLinkClassName(pathname.startsWith("/holidays"))}>
+          <CalendarDays size={17} />
+          <span>Dni wolne</span>
+        </Link>
       </nav>
 
       <div className="px-3 pb-4 overflow-visible">

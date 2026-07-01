@@ -37,3 +37,5 @@ export {
   isDayAbsent,
   toListAttendanceStatus,
 } from './attendance'
+
+export { getDayOffTypeLabel, isValidDayTypeCode } from './day-off'
