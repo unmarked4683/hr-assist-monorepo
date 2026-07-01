@@ -13,11 +13,13 @@ import {
 import { login as loginRequest, logout as logoutRequest, hasAuthSession } from '@/lib/api/auth'
 import {
   createEmployee,
+  deleteEmployee as deleteEmployeeRequest,
   fetchEmployees,
   updateEmployee,
   upsertDayRecord,
 } from '@/lib/api/employees'
 import type { DayStatus, Employee, EmployeeInput, IsoDate, Theme } from '@/lib/types'
+import { Toast, type ToastState } from '@/components/hr/shared/Toast'
 
 interface AppContextValue {
   isLoggedIn: boolean
@@ -39,6 +41,8 @@ interface AppContextValue {
   openEditEmployeeForm: (employee: Employee) => void
   closeEmployeeForm: () => void
   saveEmployee: (input: EmployeeInput, id?: string) => Promise<void>
+  deleteEmployee: (id: string) => Promise<void>
+  dismissToast: () => void
 
   isDayStatusModalOpen: boolean
   editingDate: IsoDate | null
@@ -64,6 +68,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isDayStatusModalOpen, setIsDayStatusModalOpen] = useState(false)
   const [editingDate, setEditingDate] = useState<IsoDate | null>(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [toast, setToast] = useState<ToastState | null>(null)
+  const toastIdRef = useRef(0)
   const isLoggedInRef = useRef(isLoggedIn)
   isLoggedInRef.current = isLoggedIn
 
@@ -139,14 +145,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setEditingEmployee(null)
   }, [])
 
+  const dismissToast = useCallback(() => setToast(null), [])
+
+  const showSuccessToast = useCallback((message: string) => {
+    toastIdRef.current += 1
+    setToast({ id: toastIdRef.current, message, variant: 'success' })
+  }, [])
+
   const saveEmployee = useCallback(
     async (input: EmployeeInput, id?: string) => {
-      if (id) await updateEmployee(id, input)
-      else await createEmployee(input)
+      if (id) {
+        await updateEmployee(id, input)
+        showSuccessToast('Zaktualizowano dane pracownika')
+      } else {
+        await createEmployee(input)
+        showSuccessToast('Dodano pracownika')
+      }
       await refreshEmployees()
       closeEmployeeForm()
     },
-    [closeEmployeeForm, refreshEmployees],
+    [closeEmployeeForm, refreshEmployees, showSuccessToast],
+  )
+
+  const deleteEmployee = useCallback(
+    async (id: string) => {
+      await deleteEmployeeRequest(id)
+      showSuccessToast('Usunięto pracownika')
+      await refreshEmployees()
+      closeEmployeeForm()
+    },
+    [closeEmployeeForm, refreshEmployees, showSuccessToast],
   )
 
   const openDayStatusModal = useCallback((date: IsoDate) => {
@@ -162,10 +190,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const saveDayRecord = useCallback(
     async (employeeId: string, date: IsoDate, status: DayStatus) => {
       await upsertDayRecord(employeeId, date, status)
-      await refreshEmployees()
       closeDayStatusModal()
+      showSuccessToast('Zaktualizowano frekwencję')
+      await refreshEmployees()
     },
-    [closeDayStatusModal, refreshEmployees],
+    [closeDayStatusModal, refreshEmployees, showSuccessToast],
   )
 
   const openReportModal = useCallback(() => setIsReportModalOpen(true), [])
@@ -181,6 +210,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setIsDayStatusModalOpen(false)
     setEditingDate(null)
     setIsReportModalOpen(false)
+    setToast(null)
   }, [])
 
   const value = useMemo<AppContextValue>(
@@ -201,6 +231,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       openEditEmployeeForm,
       closeEmployeeForm,
       saveEmployee,
+      deleteEmployee,
+      dismissToast,
       isDayStatusModalOpen,
       editingDate,
       openDayStatusModal,
@@ -233,12 +265,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       refreshEmployees,
       saveDayRecord,
       saveEmployee,
+      deleteEmployee,
+      dismissToast,
       setTheme,
       theme,
     ],
   )
 
-  return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>
+  return (
+    <AppCtx.Provider value={value}>
+      {children}
+      <Toast toast={toast} onDismiss={dismissToast} />
+    </AppCtx.Provider>
+  )
 }
 
 export const useApp = (): AppContextValue => {

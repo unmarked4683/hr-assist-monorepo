@@ -18,6 +18,8 @@ export const createEmployee = async (input: EmployeeInput): Promise<Employee> =>
 export const updateEmployee = async (id: string, input: EmployeeInput): Promise<Employee | null> =>
   employeeStore.update(id, input)
 
+export const deleteEmployee = async (id: string): Promise<boolean> => employeeStore.delete(id)
+
 export const upsertDayRecord = async (
   employeeId: string,
   date: IsoDate,

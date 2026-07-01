@@ -16,6 +16,7 @@ interface ModalProps {
   maxWidth?: string
   zIndex?: string
   className?: string
+  blockBrowserBack?: boolean
 }
 
 export function Modal({
@@ -25,8 +26,9 @@ export function Modal({
   maxWidth = 'max-w-md',
   zIndex = 'z-50',
   className,
+  blockBrowserBack = true,
 }: ModalProps) {
-  useBlockBrowserBackWhileOpen(open, onClose)
+  useBlockBrowserBackWhileOpen(blockBrowserBack ? open : false, onClose)
 
   if (!open) return null
 

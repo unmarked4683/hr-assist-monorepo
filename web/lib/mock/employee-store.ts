@@ -91,4 +91,11 @@ export const employeeStore = {
 
     return employeeStore.getById(employeeId)
   },
+
+  delete: (id: string): boolean => {
+    const exists = employees.some((item) => item.id === id)
+    if (!exists) return false
+    employees = employees.filter((item) => item.id !== id)
+    return true
+  },
 }
