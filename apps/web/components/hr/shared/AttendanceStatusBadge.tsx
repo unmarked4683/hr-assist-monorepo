@@ -1,6 +1,6 @@
 'use client'
 
-import type { RowStatus, ListAttendanceStatus } from '@/lib/types'
+import type { RowStatus, ListAttendanceStatus } from '@hr-assist/shared'
 
 type ListStatus = ListAttendanceStatus
 

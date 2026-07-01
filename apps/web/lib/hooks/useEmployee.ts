@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { fetchEmployeeById } from '@/lib/api/employees'
 import { useApp } from '@/components/hr/AppContext'
-import type { Employee } from '@/lib/types'
+import type { Employee } from '@hr-assist/shared'
 
 export const useEmployee = (id: string): { employee: Employee | null; isLoading: boolean } => {
   const { employees, isEmployeesReady } = useApp()

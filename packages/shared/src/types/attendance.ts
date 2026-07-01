@@ -1,4 +1,12 @@
-import type { DayStatus } from '@/lib/types'
+import type { DayStatus } from './employee'
+
+export type RowStatus =
+  | { type: 'ok' }
+  | { type: 'absent' }
+  | { type: 'leave'; label: string }
+  | { type: 'future' }
+
+export type ListAttendanceStatus = 'ok-list' | 'action-required'
 
 export const PRESENT_STATUS: DayStatus = 'Obecność'
 
@@ -19,7 +27,6 @@ export const DAY_STATUS_OPTIONS: readonly DayStatus[] = [
   'Służba wojskowa',
 ]
 
-/** Wartość selecta w modalu — usuwa zapis frekwencji dla przyszłego dnia. */
 export const REMOVE_FUTURE_ATTENDANCE = '__remove_future_attendance__' as const
 
 export const REMOVE_FUTURE_ATTENDANCE_LABEL = 'Usuń frekwencję'

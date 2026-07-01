@@ -7,15 +7,14 @@ import {
   getTodayIsoDate,
   isWeekend,
   toIsoDate,
-} from "@/lib/domain/dates";
-import { calcShiftHours } from "@/lib/domain/shift";
-import {
+  calcShiftHours,
   getRealHours,
   getRowStatus,
   hasDayRecord,
   isDayAbsent,
-} from "@/lib/domain/attendance";
-import type { Employee, IsoDate } from "@/lib/types";
+  type Employee,
+  type IsoDate,
+} from "@hr-assist/shared";
 import { AttendanceStatusBadge } from "../shared/AttendanceStatusBadge";
 import { TodayDayCell } from "../shared/TodayDayCell";
 

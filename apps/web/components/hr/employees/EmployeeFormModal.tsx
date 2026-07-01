@@ -11,10 +11,15 @@ import {
   CONTRACT_TYPE_OPTIONS,
   LOCATIONS,
   POSITION_SUGGESTIONS,
-} from '@/lib/constants/employee'
-import { parsePeselBirthdate } from '@/lib/domain/pesel'
-import { isOvernight, shiftHour } from '@/lib/domain/shift'
-import type { Company, Employee, EmployeeInput, Location, WorkDimension } from '@/lib/types'
+  parsePeselBirthdate,
+  isOvernight,
+  shiftHour,
+  type Company,
+  type Employee,
+  type EmployeeInput,
+  type Location,
+  type WorkDimension,
+} from '@hr-assist/shared'
 import { FormSelect, HourPicker, AutocompleteInput, DimensionSelect } from './employee-form-controls'
 import { EmployeeUpdateConfirmModal } from './EmployeeUpdateConfirmModal'
 

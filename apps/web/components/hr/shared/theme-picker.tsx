@@ -2,7 +2,7 @@
 
 import type { ElementType } from 'react'
 import { Monitor, Moon, Sun } from 'lucide-react'
-import type { Theme } from '@/lib/types'
+import type { Theme } from '@/lib/types/theme'
 
 export const THEME_OPTIONS: ReadonlyArray<{
   value: Theme

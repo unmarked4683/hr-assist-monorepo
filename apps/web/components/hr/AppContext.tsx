@@ -19,7 +19,8 @@ import {
   updateEmployee,
   upsertDayRecord,
 } from '@/lib/api/employees'
-import type { DayStatus, Employee, EmployeeInput, IsoDate, Theme } from '@/lib/types'
+import type { DayStatus, Employee, EmployeeInput, IsoDate } from '@hr-assist/shared'
+import type { Theme } from '@/lib/types/theme'
 import { Toast, type ToastState } from '@/components/hr/shared/Toast'
 
 interface AppContextValue {

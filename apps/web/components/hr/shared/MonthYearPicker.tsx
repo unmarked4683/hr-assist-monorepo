@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { MONTH_NAMES_NOM } from '@/lib/constants/dates'
+import { MONTH_NAMES_NOM } from '@hr-assist/shared'
 import { cn } from '@/lib/utils'
 
 interface MonthYearPickerProps {

@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { useApp } from '../AppContext'
 import { Modal, ModalHeader, ModalFooter } from '../shared/Modal'
 import { MonthYearPicker } from '../shared/MonthYearPicker'
-import { MONTH_NAMES_NOM } from '@/lib/constants/dates'
-import { getInitialTimesheetPeriod } from '@/lib/domain/dates'
+import { MONTH_NAMES_NOM, getInitialTimesheetPeriod } from '@hr-assist/shared'
 
 const MIN_YEAR = 2026
 const MIN_MONTH = 1

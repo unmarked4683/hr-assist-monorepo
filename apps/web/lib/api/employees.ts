@@ -1,6 +1,6 @@
 import { employeeStore } from '@/lib/mock/employee-store'
 import { mockApiDelay } from '@/lib/api/mock-delay'
-import type { DayStatus, Employee, EmployeeInput, IsoDate } from '@/lib/types'
+import type { DayStatus, Employee, EmployeeInput, IsoDate } from '@hr-assist/shared'
 
 export const fetchEmployees = async (): Promise<Employee[]> => {
   await mockApiDelay()

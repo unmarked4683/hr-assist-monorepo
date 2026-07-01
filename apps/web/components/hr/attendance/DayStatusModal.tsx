@@ -8,10 +8,13 @@ import {
   PRESENT_STATUS,
   REMOVE_FUTURE_ATTENDANCE,
   REMOVE_FUTURE_ATTENDANCE_LABEL,
-} from '@/lib/constants/attendance'
-import { formatPolishDate, getTodayIsoDate } from '@/lib/domain/dates'
-import { calcShiftHours } from '@/lib/domain/shift'
-import type { DayStatus, Employee, IsoDate } from '@/lib/types'
+  formatPolishDate,
+  getTodayIsoDate,
+  calcShiftHours,
+  type DayStatus,
+  type Employee,
+  type IsoDate,
+} from '@hr-assist/shared'
 
 type DayStatusFormValue = DayStatus | typeof REMOVE_FUTURE_ATTENDANCE
 

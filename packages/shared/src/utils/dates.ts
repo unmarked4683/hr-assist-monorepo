@@ -1,4 +1,5 @@
-import { DAY_ABBR, MONTH_NAMES_GEN } from '@/lib/constants/dates'
+import { DAY_ABBR, MONTH_NAMES_GEN } from '../types/dates'
+import type { IsoDate } from '../types/employee'
 
 export const formatPolishDate = (day: number, month: number, year: number): string =>
   `${day} ${MONTH_NAMES_GEN[month - 1]} ${year}`
@@ -21,8 +22,6 @@ export const getTodayIsoDate = (): IsoDate => {
   const day = String(today.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}` as IsoDate
 }
-
-import type { IsoDate } from '@/lib/types'
 
 export const toIsoDate = (year: number, month: number, day: number): IsoDate => {
   const monthPart = String(month).padStart(2, '0')

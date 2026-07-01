@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ['@hr-assist/shared'],
   typescript: {
     ignoreBuildErrors: true,
   },

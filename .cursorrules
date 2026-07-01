@@ -1,33 +1,42 @@
 # Monorepo Global Rules
 
 ## Project Context
+
 - Backend: NestJS (TypeScript)
 - Frontend: Next.js (TypeScript, App Router)
 - Database: PostgreSQL with Prisma ORM
-- Architecture: Shared interfaces in `packages/shared`
+- Architecture: Shared interfaces and logic reside in `packages/shared`
 
-## Shared Principles
-- **Single Source of Truth:** All shared data interfaces must reside in `packages/shared`. Never duplicate types between web and api.
+## Shared Principles (Critical)
+
+- **Single Source of Truth:** All shared data interfaces, enums, constants, and pure utility functions must reside in `packages/shared`.
+- **No Duplication:** Never redefine types in `apps/api` or `apps/web` if they exist in `@hr-assist/shared`.
+- **Import Policy:** Always import shared code using the package name: `import { ... } from '@hr-assist/shared'`.
 - **Strict Typing:** Always use TypeScript in strict mode. Prefer interfaces/types over `any`.
-- **DRY (Don't Repeat Yourself):** If logic is needed in both places, extract it to `packages/shared` or a utility library.
+- **DRY (Don't Repeat Yourself):** If logic (e.g., validation, date formatting, PESEL check) is needed in both places, extract it to `packages/shared`.
 
 ## Backend Rules (NestJS)
+
 - Keep controllers thin. Move business logic to services.
 - Always validate incoming requests using DTOs and `class-validator`.
 - Always generate OpenAPI (Swagger) documentation using NestJS decorators.
 - Prisma: Never expose raw database entities directly to the frontend. Map them to specific DTOs.
 
 ## Frontend Rules (Next.js)
+
 - Use Tailwind CSS for styling.
 - Prefer Server Components where possible; use Client Components (`'use client'`) only when interactive state is required.
 - Consistency: Keep components in `/components` and hooks in `/hooks`.
 - Accessibility: Always use semantic HTML. If you create a custom interactive element, include proper `aria-` labels.
 
 ## Communication
-- API Communication: Prefer strict typing for all API responses. 
+
+- API Communication: Prefer strict typing for all API responses based on `@hr-assist/shared`.
 - If an API schema changes, update `packages/shared` first, then run a check to ensure frontend and backend are compliant.
 
 ## Cursor Interaction
-- Before creating a new feature, scan the existing structure in `packages/shared` to see if a model already exists.
+
+- Before creating a new feature, scan the existing structure in `packages/shared` to see if a model or utility already exists.
 - If unsure about a path, ask for the monorepo structure.
 - Always prefer modularity over "quick fixes".
+- Treat `packages/shared` as the primary library for all cross-app code.

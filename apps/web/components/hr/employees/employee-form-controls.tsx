@@ -2,10 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { DIMENSION_LABEL, WORK_DIMENSIONS } from '@/lib/constants/employee'
-import { formatHour } from '@/lib/domain/shift'
+import { DIMENSION_LABEL, WORK_DIMENSIONS, formatHour, type WorkDimension } from '@hr-assist/shared'
 import { useClickOutside } from '@/lib/hooks/useClickOutside'
-import type { WorkDimension } from '@/lib/types'
 
 const DROPDOWN_PANEL =
   'absolute top-full left-0 right-0 z-[100] bg-popover border border-border rounded-lg shadow-xl overflow-y-auto'

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, FileText, Trash2 } from "lucide-react";
-import type { Employee } from '@/lib/types'
+import type { Employee } from '@hr-assist/shared'
 import { useApp } from "../AppContext";
 import { MonthYearPicker } from "../shared/MonthYearPicker";
 import { EmployeeDeleteConfirmModal } from "./EmployeeDeleteConfirmModal";

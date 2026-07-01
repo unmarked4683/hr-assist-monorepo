@@ -1,4 +1,4 @@
-import type { DayStatus, Employee, EmployeeInput, IsoDate } from '@/lib/types'
+import type { DayStatus, Employee, EmployeeInput, IsoDate } from '@hr-assist/shared'
 
 const cloneEmployees = (items: Employee[]): Employee[] =>
   items.map((employee) => ({

@@ -1,6 +1,11 @@
-import { PRESENT_STATUS, UNEXCUSED_ABSENCE_STATUS } from '@/lib/constants/attendance'
-import { calcShiftHours } from '@/lib/domain/shift'
-import type { Employee, RowStatus } from '@/lib/types'
+import {
+  PRESENT_STATUS,
+  UNEXCUSED_ABSENCE_STATUS,
+  type ListAttendanceStatus,
+  type RowStatus,
+} from '../types/attendance'
+import type { Employee } from '../types/employee'
+import { calcShiftHours } from './shift'
 
 export const getRowStatus = (
   dateStr: string,
@@ -39,5 +44,5 @@ export const isDayAbsent = (dateStr: string, employee: Employee): boolean => {
   return record?.status === UNEXCUSED_ABSENCE_STATUS
 }
 
-export const toListAttendanceStatus = (needsAction: boolean) =>
-  needsAction ? ('action-required' as const) : ('ok-list' as const)
+export const toListAttendanceStatus = (needsAction: boolean): ListAttendanceStatus =>
+  needsAction ? 'action-required' : 'ok-list'
