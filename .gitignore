@@ -16,6 +16,7 @@
 
 # Build and compiled outputs
 **/dist/
+**/generated/
 **/.next/
 **/build/
 **/out/
